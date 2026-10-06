@@ -3,8 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { AlertTriangle, DollarSign, Search, ShieldCheck, FileSpreadsheet, Trash2 } from 'lucide-react';
 import { DamagedStockLog } from '@/types';
+import { useI18nStore } from '@/store/i18nStore';
 
 export default function DamagedStockPage() {
+  const { t, formatCurrency } = useI18nStore();
   const [logs, setLogs] = useState<DamagedStockLog[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);

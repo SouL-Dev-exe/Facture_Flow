@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { usePosStore } from '@/store/posStore';
 import { useAuthStore } from '@/store/authStore';
+import { useI18nStore } from '@/store/i18nStore';
 import { Product, Category, Client, PaymentMethod, Facture } from '@/types';
 import { StockBadge } from '@/components/StockBadge';
 import { ManagerPinModal } from '@/components/ManagerPinModal';
@@ -32,6 +33,7 @@ import { PrintableInvoice } from '@/components/PrintableInvoice';
 
 export default function PosPage() {
   const { currentUser } = useAuthStore();
+  const { t, formatCurrency } = useI18nStore();
   const {
     cart,
     selectedClient,

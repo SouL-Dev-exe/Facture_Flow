@@ -30,9 +30,11 @@ import {
 import { AnalyticsSummary, Facture, Product, AuditLog } from '@/types';
 import { StockBadge } from '@/components/StockBadge';
 import { useAuthStore } from '@/store/authStore';
+import { useI18nStore } from '@/store/i18nStore';
 
 export default function DashboardPage() {
   const { currentUser } = useAuthStore();
+  const { t, formatCurrency } = useI18nStore();
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
   const [recentFactures, setRecentFactures] = useState<Facture[]>([]);
   const [lowStockProducts, setLowStockProducts] = useState<Product[]>([]);

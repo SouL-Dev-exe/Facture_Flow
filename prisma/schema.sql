@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS users (
     full_name VARCHAR(100) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
+    password VARCHAR(100), -- Plain text demo password
     pin_code VARCHAR(10), -- 4-digit PIN for manager authorization
     role VARCHAR(20) NOT NULL DEFAULT 'cashier', -- 'admin', 'manager', 'cashier'
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP

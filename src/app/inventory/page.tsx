@@ -24,9 +24,11 @@ import { QuickStockAdjuster } from '@/components/QuickStockAdjuster';
 import { WebpUploader } from '@/components/WebpUploader';
 import { ManagerPinModal } from '@/components/ManagerPinModal';
 import { useAuthStore } from '@/store/authStore';
+import { useI18nStore } from '@/store/i18nStore';
 
 export default function InventoryPage() {
   const { currentUser } = useAuthStore();
+  const { t, formatCurrency } = useI18nStore();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -201,7 +203,7 @@ export default function InventoryPage() {
             className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-md shadow-indigo-600/30 transition"
           >
             <Plus className="w-4 h-4" />
-            Add New Product
+            {t.inventory.addProduct}
           </button>
         </div>
       </div>
@@ -209,13 +211,13 @@ export default function InventoryPage() {
       {/* Filter and Search Bar */}
       <div className="flex flex-col md:flex-row items-center gap-3 bg-white dark:bg-zinc-900/90 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xs">
         <div className="relative flex-1 w-full">
-          <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-2.5" />
+          <Search className="w-4 h-4 text-zinc-400 absolute start-3.5 top-2.5" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by SKU, product name, or barcode..."
-            className="w-full pl-10 pr-4 py-2 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/60 rounded-xl text-xs text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:border-indigo-500"
+            placeholder={t.inventory.searchProducts}
+            className="w-full ps-10 pe-4 py-2 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/60 rounded-xl text-xs text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:border-indigo-500"
           />
         </div>
 
@@ -225,7 +227,7 @@ export default function InventoryPage() {
           onChange={(e) => setSelectedCategory(e.target.value)}
           className="w-full md:w-48 py-2 px-3 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/60 rounded-xl text-xs text-zinc-700 dark:text-zinc-200 focus:outline-none"
         >
-          <option value="all">All Categories</option>
+          <option value="all">{t.inventory.allCategories}</option>
           {categories.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
@@ -246,7 +248,7 @@ export default function InventoryPage() {
                   : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300'
               }`}
             >
-              {filter === 'all' ? 'All' : filter === 'low' ? 'Low Stock' : 'Out of Stock'}
+              {filter === 'all' ? t.common.filter : filter === 'low' ? t.inventory.lowStock : t.inventory.outOfStock}
             </button>
           ))}
         </div>
@@ -255,17 +257,17 @@ export default function InventoryPage() {
       {/* Products Data Table */}
       <div className="bg-white dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+          <table className="w-full text-start text-xs">
             <thead>
               <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50 text-zinc-500 dark:text-zinc-400 uppercase text-[10px] font-bold tracking-wider">
-                <th className="py-3 px-4">Product / SKU</th>
-                <th className="py-3 px-4">Category</th>
-                <th className="py-3 px-4 text-right">Cost Price</th>
-                <th className="py-3 px-4 text-right">Retail Price</th>
-                <th className="py-3 px-4 text-center">Quick Stock Adjuster</th>
-                <th className="py-3 px-4 text-center">Damaged Pool</th>
-                <th className="py-3 px-4 text-center">Status</th>
-                <th className="py-3 px-4 text-right">Actions</th>
+                <th className="py-3 px-4">{t.inventory.product} / {t.inventory.sku}</th>
+                <th className="py-3 px-4">{t.inventory.category}</th>
+                <th className="py-3 px-4 text-end">{t.inventory.unitCost}</th>
+                <th className="py-3 px-4 text-end">{t.inventory.sellingPrice}</th>
+                <th className="py-3 px-4 text-center">{t.inventory.adjustStock}</th>
+                <th className="py-3 px-4 text-center">{t.inventory.qtyDamaged}</th>
+                <th className="py-3 px-4 text-center">{t.inventory.status}</th>
+                <th className="py-3 px-4 text-end">{t.inventory.actions}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800/60">
@@ -306,13 +308,13 @@ export default function InventoryPage() {
                   </td>
 
                   {/* Cost Price */}
-                  <td className="py-3 px-4 text-right font-mono text-zinc-500 dark:text-zinc-400">
-                    ${prod.unitCost.toFixed(2)}
+                  <td className="py-3 px-4 text-end font-mono text-zinc-500 dark:text-zinc-400">
+                    {formatCurrency(prod.unitCost)}
                   </td>
 
                   {/* Selling Price */}
-                  <td className="py-3 px-4 text-right font-mono font-bold text-zinc-900 dark:text-zinc-100">
-                    ${prod.sellingPrice.toFixed(2)}
+                  <td className="py-3 px-4 text-end font-mono font-bold text-zinc-900 dark:text-zinc-100">
+                    {formatCurrency(prod.sellingPrice)}
                   </td>
 
                   {/* Quick Stock Adjuster (+1, +5, -1, -5) */}

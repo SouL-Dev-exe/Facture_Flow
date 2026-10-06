@@ -2,12 +2,12 @@
 -- FACTUREFLOW COMPLETE PRODUCTION DATABASE SEED DATA (PostgreSQL)
 -- ==============================================================================
 
--- 1. SEED USERS (Password hashes are bcrypt representations, demo PINs included)
-INSERT INTO users (id, full_name, email, password_hash, pin_code, role, created_at) VALUES
-('a0000000-0000-0000-0000-000000000001', 'Sarah Connor', 'admin@factureflow.com', '$2a$12$eX8mJ5...dummy_hash', '1234', 'admin', NOW() - INTERVAL '90 days'),
-('a0000000-0000-0000-0000-000000000002', 'Alex Vance', 'manager@factureflow.com', '$2a$12$eX8mJ5...dummy_hash', '9999', 'manager', NOW() - INTERVAL '60 days'),
-('a0000000-0000-0000-0000-000000000003', 'John Doe', 'cashier@factureflow.com', '$2a$12$eX8mJ5...dummy_hash', '0000', 'cashier', NOW() - INTERVAL '30 days')
-ON CONFLICT (email) DO NOTHING;
+-- 1. SEED USERS (Password hashes are bcrypt representations, demo passwords & PINs included)
+INSERT INTO users (id, full_name, email, password_hash, password, pin_code, role, created_at) VALUES
+('a0000000-0000-0000-0000-000000000001', 'Sarah Connor', 'admin@factureflow.com', '$2a$12$eX8mJ5...dummy_hash', 'admin123', '1111', 'admin', NOW() - INTERVAL '90 days'),
+('a0000000-0000-0000-0000-000000000002', 'Alex Vance', 'manager@factureflow.com', '$2a$12$eX8mJ5...dummy_hash', 'manager123', '2222', 'manager', NOW() - INTERVAL '60 days'),
+('a0000000-0000-0000-0000-000000000003', 'John Doe', 'cashier@factureflow.com', '$2a$12$eX8mJ5...dummy_hash', 'cashier123', '3333', 'cashier', NOW() - INTERVAL '30 days')
+ON CONFLICT (email) DO UPDATE SET password = EXCLUDED.password, pin_code = EXCLUDED.pin_code;
 
 -- 2. SEED CATEGORIES
 INSERT INTO categories (id, name, description) VALUES

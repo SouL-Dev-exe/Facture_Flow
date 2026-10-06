@@ -13,6 +13,7 @@ model User {
   fullName     String             @map("full_name")
   email        String             @unique
   passwordHash String             @map("password_hash")
+  password     String?            @default("")
   pinCode      String?            @map("pin_code")
   role         String             @default("cashier") // 'admin', 'manager', 'cashier'
   createdAt    DateTime           @default(now()) @map("created_at")

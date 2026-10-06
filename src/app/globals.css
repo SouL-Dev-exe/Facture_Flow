@@ -1,3 +1,6 @@
+/* Google Fonts — Inter (LTR) + Noto Sans Arabic (RTL) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+Arabic:wght@300;400;500;600;700;800&family=Cairo:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -10,6 +13,20 @@
   body {
     @apply bg-slate-50 text-slate-900 antialiased dark:bg-[#09090b] dark:text-zinc-100;
     font-feature-settings: "rlig" 1, "calt" 1, "tnum" 1;
+    font-family: var(--font-sans);
+  }
+
+  /* Arabic RTL font override */
+  [dir="rtl"] body,
+  [dir="rtl"] {
+    font-family: 'Noto Sans Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif;
+    letter-spacing: 0;
+  }
+
+  /* RTL-aware sidebar positioning */
+  [dir="rtl"] aside {
+    border-right: none;
+    border-left: 1px solid;
   }
 }
 
@@ -44,8 +61,20 @@
   40%, 80% { transform: translateX(8px); }
 }
 
+/* RTL shake (flipped) */
+[dir="rtl"] @keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(8px); }
+  40%, 80% { transform: translateX(-8px); }
+}
+
 .animate-shake {
   animation: shake 0.4s ease-in-out;
+}
+
+/* Language switcher transition */
+.lang-transition {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Print Optimization for Invoices and Thermal Receipts */

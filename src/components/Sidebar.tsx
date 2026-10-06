@@ -13,27 +13,35 @@ import {
   TrendingUp,
   History,
   ShieldCheck,
-  Zap,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
+import { useI18nStore } from '@/store/i18nStore';
 
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
   const { currentUser } = useAuthStore();
+  const { t } = useI18nStore();
 
   const navItems = [
-    { label: 'Dashboard', href: '/', icon: LayoutDashboard, badge: null },
-    { label: 'POS Terminal', href: '/pos', icon: ShoppingCart, badge: 'Live', isHot: true },
-    { label: 'Inventory & Stock', href: '/inventory', icon: Boxes, badge: null },
-    { label: 'Factures (Invoices)', href: '/factures', icon: FileSpreadsheet, badge: null },
-    { label: 'Credit Notes (Avoir)', href: '/credit-notes', icon: RotateCcw, badge: null },
-    { label: 'Damaged Stock', href: '/damaged', icon: AlertTriangle, badge: null },
-    { label: 'Valuation & YoY', href: '/analytics', icon: TrendingUp, badge: 'YoY' },
-    { label: 'Audit Trail', href: '/audit', icon: History, badge: 'Logs' },
+    { labelKey: 'dashboard' as const, href: '/', icon: LayoutDashboard, badge: null },
+    { labelKey: 'pos' as const, href: '/pos', icon: ShoppingCart, badge: 'Live', isHot: true },
+    { labelKey: 'inventory' as const, href: '/inventory', icon: Boxes, badge: null },
+    { labelKey: 'factures' as const, href: '/factures', icon: FileSpreadsheet, badge: null },
+    { labelKey: 'creditNotes' as const, href: '/credit-notes', icon: RotateCcw, badge: null },
+    { labelKey: 'damaged' as const, href: '/damaged', icon: AlertTriangle, badge: null },
+    { labelKey: 'analytics' as const, href: '/analytics', icon: TrendingUp, badge: 'YoY' },
+    { labelKey: 'audit' as const, href: '/audit', icon: History, badge: 'Logs' },
   ];
 
+  const rbacDesc =
+    currentUser.role === 'admin'
+      ? t.common.adminAccess
+      : currentUser.role === 'manager'
+      ? t.common.managerAccess
+      : t.common.cashierAccess;
+
   return (
-    <aside className="w-64 border-r border-zinc-200 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-950/60 backdrop-blur-xl flex flex-col justify-between shrink-0 h-screen sticky top-0 transition-colors">
+    <aside className="w-64 border-e border-zinc-200 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-950/60 backdrop-blur-xl flex flex-col justify-between shrink-0 h-screen sticky top-0 transition-colors">
       {/* Brand Header */}
       <div>
         <div className="h-16 px-6 border-b border-zinc-200 dark:border-zinc-800/80 flex items-center gap-3">
@@ -53,11 +61,12 @@ export const Sidebar: React.FC = () => {
         {/* Navigation Links */}
         <div className="p-4 space-y-1.5">
           <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
-            Core Modules
+            {t.nav.coreModules}
           </div>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
+            const label = t.nav[item.labelKey];
 
             return (
               <Link
@@ -77,7 +86,7 @@ export const Sidebar: React.FC = () => {
                         : 'text-zinc-500 dark:text-zinc-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'
                     }`}
                   />
-                  <span>{item.label}</span>
+                  <span>{label}</span>
                 </div>
 
                 {item.badge && (
@@ -105,19 +114,13 @@ export const Sidebar: React.FC = () => {
           <div className="flex items-center justify-between text-xs">
             <span className="font-semibold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5 text-indigo-500" />
-              RBAC Guard
+              {t.common.rbacGuard}
             </span>
             <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 capitalize">
-              {currentUser.role}
+              {t.roles[currentUser.role]}
             </span>
           </div>
-          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">
-            {currentUser.role === 'admin'
-              ? 'Full overrides & system write access.'
-              : currentUser.role === 'manager'
-              ? 'Stock adjust, returns & price overrides.'
-              : 'POS & barcode billing checkout only.'}
-          </p>
+          <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1">{rbacDesc}</p>
         </div>
       </div>
     </aside>

@@ -17,9 +17,11 @@ import { Facture, Product } from '@/types';
 import { PrintableInvoice } from '@/components/PrintableInvoice';
 import { ManagerPinModal } from '@/components/ManagerPinModal';
 import { useAuthStore } from '@/store/authStore';
+import { useI18nStore } from '@/store/i18nStore';
 
 export default function FacturesPage() {
   const { currentUser } = useAuthStore();
+  const { t, formatCurrency } = useI18nStore();
   const [factures, setFactures] = useState<Facture[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');

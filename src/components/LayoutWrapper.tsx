@@ -5,11 +5,14 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { CommandPalette } from './CommandPalette';
 import { useThemeStore } from '@/store/themeStore';
+import { useI18nStore } from '@/store/i18nStore';
 
 export const LayoutWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const { isDarkMode } = useThemeStore();
+  const { isRTL } = useI18nStore();
 
+  // Sync dark mode class
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
@@ -18,8 +21,22 @@ export const LayoutWrapper: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [isDarkMode]);
 
+  // Sync RTL direction & font for Arabic
+  useEffect(() => {
+    document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
+    if (isRTL) {
+      document.documentElement.style.fontFamily =
+        "'Noto Sans Arabic', 'Cairo', 'Tahoma', 'Arial', sans-serif";
+    } else {
+      document.documentElement.style.fontFamily = '';
+    }
+  }, [isRTL]);
+
   return (
-    <div className="flex w-full h-screen overflow-hidden bg-slate-50 dark:bg-[#09090b]">
+    <div
+      className="flex w-full h-screen overflow-hidden bg-slate-50 dark:bg-[#09090b]"
+      dir={isRTL ? 'rtl' : 'ltr'}
+    >
       {/* Sidebar */}
       <Sidebar />
 

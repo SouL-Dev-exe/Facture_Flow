@@ -12,8 +12,10 @@ import {
   Terminal,
 } from 'lucide-react';
 import { AuditLog } from '@/types';
+import { useI18nStore } from '@/store/i18nStore';
 
 export default function AuditPage() {
+  const { t } = useI18nStore();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAction, setSelectedAction] = useState('all');

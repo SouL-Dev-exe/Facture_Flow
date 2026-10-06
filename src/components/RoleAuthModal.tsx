@@ -11,11 +11,10 @@ import {
   ShieldAlert,
   CheckCircle2,
   X,
-  Sparkles,
-  ArrowRight,
 } from 'lucide-react';
 import { UserRole } from '@/types';
 import { useAuthStore } from '@/store/authStore';
+import { useI18nStore } from '@/store/i18nStore';
 
 interface RoleAuthModalProps {
   isOpen: boolean;
@@ -38,6 +37,7 @@ export const RoleAuthModal: React.FC<RoleAuthModalProps> = ({
   const [isSuccess, setIsSuccess] = useState(false);
 
   const { authenticateRoleChange } = useAuthStore();
+  const { t } = useI18nStore();
 
   useEffect(() => {
     if (isOpen) {
@@ -55,31 +55,31 @@ export const RoleAuthModal: React.FC<RoleAuthModalProps> = ({
     { title: string; color: string; bg: string; border: string; demoPass: string; demoPin: string; desc: string }
   > = {
     admin: {
-      title: 'Administrator',
+      title: t.roles.adminFull,
       color: 'text-purple-400',
       bg: 'bg-purple-500/10',
       border: 'border-purple-500/30',
       demoPass: 'admin123',
       demoPin: '1111',
-      desc: 'Full system write access, financial valuation overrides, and snapshot management.',
+      desc: t.auth.adminDesc,
     },
     manager: {
-      title: 'Store Manager',
+      title: t.roles.managerFull,
       color: 'text-indigo-400',
       bg: 'bg-indigo-500/10',
       border: 'border-indigo-500/30',
       demoPass: 'manager123',
       demoPin: '2222',
-      desc: 'Stock level adjustments, returns/credit notes approval, and price override authorization.',
+      desc: t.auth.managerDesc,
     },
     cashier: {
-      title: 'Cashier Staff',
+      title: t.roles.cashierFull,
       color: 'text-emerald-400',
       bg: 'bg-emerald-500/10',
       border: 'border-emerald-500/30',
       demoPass: 'cashier123',
       demoPin: '3333',
-      desc: 'POS register operation, barcode product scanning, and invoice printing.',
+      desc: t.auth.cashierDesc,
     },
   };
 
@@ -88,7 +88,7 @@ export const RoleAuthModal: React.FC<RoleAuthModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!credential.trim()) {
-      setError('Please enter the password or PIN');
+      setError(t.auth.enterCredential);
       triggerShake();
       return;
     }
@@ -107,7 +107,7 @@ export const RoleAuthModal: React.FC<RoleAuthModalProps> = ({
       }, 500);
     } else {
       setIsLoading(false);
-      setError(result.message || 'Invalid authentication credentials');
+      setError(result.message || t.auth.invalidCredentials);
       triggerShake();
     }
   };
@@ -125,7 +125,7 @@ export const RoleAuthModal: React.FC<RoleAuthModalProps> = ({
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4">
-        {/* Backdrop motion */}
+        {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -147,9 +147,9 @@ export const RoleAuthModal: React.FC<RoleAuthModalProps> = ({
             animation: isShaking ? 'shake 0.4s ease-in-out' : undefined,
           }}
         >
-          {/* Top glowing ambient gradient */}
+          {/* Top glow bar */}
           <div
-            className={`absolute top-0 left-0 right-0 h-1 bg-linear-to-r ${
+            className={`absolute top-0 start-0 end-0 h-1 bg-linear-to-r ${
               targetRole === 'admin'
                 ? 'from-purple-500 to-indigo-500'
                 : targetRole === 'manager'
@@ -162,7 +162,7 @@ export const RoleAuthModal: React.FC<RoleAuthModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-100 p-1 rounded-lg hover:bg-zinc-800/80 transition"
+            className="absolute top-4 end-4 text-zinc-400 hover:text-zinc-100 p-1 rounded-lg hover:bg-zinc-800/80 transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -176,10 +176,10 @@ export const RoleAuthModal: React.FC<RoleAuthModalProps> = ({
             </div>
             <div>
               <span className="text-[10px] font-mono uppercase font-bold tracking-wider text-zinc-400">
-                Security Verification
+                {t.auth.securityVerification}
               </span>
               <h3 className="text-lg font-bold text-white flex items-center gap-1.5">
-                Authenticate as <span className={meta.color}>{meta.title}</span>
+                {t.auth.authenticateAs} <span className={meta.color}>{meta.title}</span>
               </h3>
             </div>
           </div>
@@ -191,9 +191,9 @@ export const RoleAuthModal: React.FC<RoleAuthModalProps> = ({
             <div className="flex items-center justify-between text-zinc-400 mb-2">
               <span className="text-[11px] font-semibold text-zinc-300 flex items-center gap-1">
                 <KeyRound className="w-3.5 h-3.5 text-indigo-400" />
-                Default Credentials:
+                {t.auth.defaultCredentials}
               </span>
-              <span className="text-[10px] text-zinc-500">Click to autofill</span>
+              <span className="text-[10px] text-zinc-500">{t.auth.clickToAutofill}</span>
             </div>
             <div className="flex gap-2">
               <button
@@ -201,14 +201,14 @@ export const RoleAuthModal: React.FC<RoleAuthModalProps> = ({
                 onClick={() => handleQuickFill(meta.demoPass)}
                 className="flex-1 py-1 px-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 text-[11px] font-mono text-center transition"
               >
-                Password: <strong>{meta.demoPass}</strong>
+                {t.auth.password}: <strong>{meta.demoPass}</strong>
               </button>
               <button
                 type="button"
                 onClick={() => handleQuickFill(meta.demoPin)}
                 className="flex-1 py-1 px-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 text-[11px] font-mono text-center transition"
               >
-                PIN: <strong>{meta.demoPin}</strong>
+                {t.auth.pin}: <strong>{meta.demoPin}</strong>
               </button>
             </div>
           </div>
@@ -225,7 +225,7 @@ export const RoleAuthModal: React.FC<RoleAuthModalProps> = ({
           {isSuccess && (
             <div className="mb-4 p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2 animate-in fade-in">
               <CheckCircle2 className="w-4 h-4 shrink-0" />
-              <span>Authenticated successfully as {meta.title}!</span>
+              <span>{t.auth.authenticatedAs} {meta.title}!</span>
             </div>
           )}
 
@@ -233,7 +233,7 @@ export const RoleAuthModal: React.FC<RoleAuthModalProps> = ({
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-[11px] font-semibold text-zinc-400 mb-1">
-                Enter Password or 4-Digit PIN
+                {t.auth.enterPasswordOrPin}
               </label>
               <div className="relative">
                 <input
@@ -245,12 +245,12 @@ export const RoleAuthModal: React.FC<RoleAuthModalProps> = ({
                     setError(null);
                   }}
                   placeholder={`e.g. ${meta.demoPass} or ${meta.demoPin}`}
-                  className="w-full pl-3 pr-10 py-2.5 bg-zinc-900 border border-zinc-700/80 rounded-xl text-xs font-mono text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-indigo-500 transition"
+                  className="w-full ps-3 pe-10 py-2.5 bg-zinc-900 border border-zinc-700/80 rounded-xl text-xs font-mono text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-indigo-500 transition"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-2.5 text-zinc-400 hover:text-zinc-200"
+                  className="absolute end-3 top-2.5 text-zinc-400 hover:text-zinc-200"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -264,7 +264,7 @@ export const RoleAuthModal: React.FC<RoleAuthModalProps> = ({
                 onClick={onClose}
                 className="flex-1 py-2.5 rounded-xl border border-zinc-700 text-zinc-300 hover:bg-zinc-800 text-xs font-semibold transition"
               >
-                Cancel
+                {t.auth.cancel}
               </button>
               <button
                 type="submit"
@@ -282,12 +282,12 @@ export const RoleAuthModal: React.FC<RoleAuthModalProps> = ({
                 ) : isSuccess ? (
                   <>
                     <CheckCircle2 className="w-4 h-4" />
-                    Verified
+                    {t.auth.verified}
                   </>
                 ) : (
                   <>
                     <ShieldCheck className="w-4 h-4" />
-                    Confirm Role Switch
+                    {t.auth.confirmSwitch}
                   </>
                 )}
               </button>

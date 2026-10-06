@@ -4,8 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { RotateCcw, Search, Printer, FileText, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { CreditNote } from '@/types';
 import { PrintableInvoice } from '@/components/PrintableInvoice';
+import { useI18nStore } from '@/store/i18nStore';
 
 export default function CreditNotesPage() {
+  const { t, formatCurrency } = useI18nStore();
   const [creditNotes, setCreditNotes] = useState<CreditNote[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedNoteForPrint, setSelectedNoteForPrint] = useState<CreditNote | null>(null);
