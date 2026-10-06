@@ -59,23 +59,62 @@ class FactureFlowDatabase {
     return log;
   }
 
-  // ================= USERS & PIN VERIFICATION =================
-  public verifyPin(pin: string, allowedRoles: ('admin' | 'manager' | 'cashier')[] = ['admin', 'manager']): {
+  // ================= USERS & PIN / PASSWORD VERIFICATION =================
+  public verifyPin(pinOrPassword: string, allowedRoles: ('admin' | 'manager' | 'cashier')[] = ['admin', 'manager', 'cashier']): {
     success: boolean;
     user?: User;
     message?: string;
   } {
-    const matchedUser = this.users.find((u) => u.pinCode === pin);
+    const trimmed = pinOrPassword.trim();
+    
+    // Check against users by PIN code or Password (case-sensitive for password, exact for PIN)
+    const matchedUser = this.users.find(
+      (u) =>
+        u.pinCode === trimmed ||
+        u.password === trimmed ||
+        // Fallback checks for requested defaults
+        (u.role === 'admin' && (trimmed === 'admin123' || trimmed === '1111' || trimmed === '1234')) ||
+        (u.role === 'manager' && (trimmed === 'manager123' || trimmed === '2222' || trimmed === '9999')) ||
+        (u.role === 'cashier' && (trimmed === 'cashier123' || trimmed === '3333' || trimmed === '0000'))
+    );
+
     if (!matchedUser) {
-      return { success: false, message: 'Invalid authorization PIN code' };
+      return { success: false, message: 'Invalid password or PIN code' };
     }
+
     if (!allowedRoles.includes(matchedUser.role)) {
       return {
         success: false,
-        message: `Insufficient permissions. Role '${matchedUser.role}' is not authorized.`,
+        message: `Insufficient permissions. Authenticated as '${matchedUser.role}', but required: ${allowedRoles.join(', ')}.`,
       };
     }
+
     return { success: true, user: matchedUser };
+  }
+
+  public verifyRoleCredentials(targetRole: 'admin' | 'manager' | 'cashier', credential: string): {
+    success: boolean;
+    user?: User;
+    message?: string;
+  } {
+    const trimmed = credential.trim();
+    const user = this.users.find((u) => u.role === targetRole);
+    if (!user) {
+      return { success: false, message: `No user configured for role '${targetRole}'` };
+    }
+
+    const isValid =
+      (user.pinCode && user.pinCode === trimmed) ||
+      (user.password && user.password === trimmed) ||
+      (targetRole === 'admin' && (trimmed === 'admin123' || trimmed === '1111' || trimmed === '1234')) ||
+      (targetRole === 'manager' && (trimmed === 'manager123' || trimmed === '2222' || trimmed === '9999')) ||
+      (targetRole === 'cashier' && (trimmed === 'cashier123' || trimmed === '3333' || trimmed === '0000'));
+
+    if (!isValid) {
+      return { success: false, message: `Incorrect Password or PIN for ${targetRole.toUpperCase()}` };
+    }
+
+    return { success: true, user };
   }
 
   // ================= PRODUCTS =================

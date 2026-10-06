@@ -1,12 +1,13 @@
 import { User, Category, Product, Client, Facture, CreditNote, DamagedStockLog, AuditLog, DailyStockSnapshot } from '@/types';
 
-export const initialUsers: User[] = [
+export const initialUsers: (User & { password?: string })[] = [
   {
     id: 'user-admin-1',
     fullName: 'Sarah Connor',
     email: 'admin@factureflow.com',
     role: 'admin',
-    pinCode: '1234',
+    pinCode: '1111',
+    password: 'admin123',
     createdAt: new Date(Date.now() - 90 * 86400000).toISOString(),
   },
   {
@@ -14,7 +15,8 @@ export const initialUsers: User[] = [
     fullName: 'Alex Vance',
     email: 'manager@factureflow.com',
     role: 'manager',
-    pinCode: '9999',
+    pinCode: '2222',
+    password: 'manager123',
     createdAt: new Date(Date.now() - 60 * 86400000).toISOString(),
   },
   {
@@ -22,7 +24,8 @@ export const initialUsers: User[] = [
     fullName: 'John Doe',
     email: 'cashier@factureflow.com',
     role: 'cashier',
-    pinCode: '0000',
+    pinCode: '3333',
+    password: 'cashier123',
     createdAt: new Date(Date.now() - 30 * 86400000).toISOString(),
   },
 ];
