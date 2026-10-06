@@ -5,18 +5,8 @@ import {
   Boxes,
   Plus,
   Search,
-  Filter,
   AlertTriangle,
-  Sparkles,
-  Download,
-  Upload,
-  Layers,
-  Edit,
-  Trash2,
   X,
-  CheckCircle2,
-  DollarSign,
-  ShieldAlert,
 } from 'lucide-react';
 import { Product, Category } from '@/types';
 import { StockBadge } from '@/components/StockBadge';
@@ -34,7 +24,6 @@ export default function InventoryPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [stockFilter, setStockFilter] = useState<'all' | 'low' | 'out'>('all');
-  const [isLoading, setIsLoading] = useState(true);
 
   // Modals
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -78,8 +67,6 @@ export default function InventoryPage() {
       }
     } catch (err) {
       console.error('Failed to load inventory', err);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -107,7 +94,7 @@ export default function InventoryPage() {
   const handleCreateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newProduct.sku || !newProduct.name || newProduct.sellingPrice <= 0) {
-      setFormError('Please fill in required fields (SKU, Name, Selling Price)');
+      setFormError(t.inventory.required);
       return;
     }
 
@@ -141,10 +128,10 @@ export default function InventoryPage() {
         });
         fetchProducts();
       } else {
-        setFormError(data.message || 'Failed to create product');
+        setFormError(data.message || t.common.error);
       }
     } catch (err: any) {
-      setFormError('Server error creating product');
+      setFormError(t.common.error);
     } finally {
       setIsSubmitting(false);
     }
@@ -184,10 +171,10 @@ export default function InventoryPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
-            Product Catalog & Inventory
+            {t.inventory.title}
           </h1>
           <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            Real-time stock valuation, smart badges, inline quick stock adjustments, and write-offs.
+            {t.inventory.subtitle}
           </p>
         </div>
 
@@ -289,14 +276,14 @@ export default function InventoryPage() {
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-[10px] font-mono text-zinc-400">
-                            IMG
+                            {prod.sku}
                           </div>
                         )}
                       </div>
                       <div>
                         <p className="font-bold text-zinc-900 dark:text-zinc-100">{prod.name}</p>
                         <span className="font-mono text-[10px] text-zinc-400">
-                          SKU: {prod.sku} {prod.barcode ? `| Barcode: ${prod.barcode}` : ''}
+                          {t.inventory.sku}: {prod.sku} {prod.barcode ? `| ${t.inventory.barcode}: ${prod.barcode}` : ''}
                         </span>
                       </div>
                     </div>
@@ -304,7 +291,7 @@ export default function InventoryPage() {
 
                   {/* Category */}
                   <td className="py-3 px-4 text-zinc-600 dark:text-zinc-300 font-medium">
-                    {prod.category?.name || 'Uncategorized'}
+                    {prod.category?.name || t.inventory.allCategories}
                   </td>
 
                   {/* Cost Price */}
@@ -337,7 +324,7 @@ export default function InventoryPage() {
                   <td className="py-3 px-4 text-center font-mono">
                     {prod.quantityDamaged > 0 ? (
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20">
-                        {prod.quantityDamaged} units
+                        {prod.quantityDamaged} {t.common.items}
                       </span>
                     ) : (
                       <span className="text-zinc-400 text-[11px]">0</span>
@@ -353,7 +340,7 @@ export default function InventoryPage() {
                   </td>
 
                   {/* Actions (Write off damaged) */}
-                  <td className="py-3 px-4 text-right">
+                  <td className="py-3 px-4 text-end">
                     <button
                       type="button"
                       onClick={() => {
@@ -361,10 +348,10 @@ export default function InventoryPage() {
                         setWriteOffQty(1);
                         setIsWriteOffModalOpen(true);
                       }}
-                      title="Write off broken or damaged stock"
+                      title={t.damaged.logDamage}
                       className="px-2.5 py-1 text-[11px] font-semibold text-rose-600 dark:text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 rounded-lg border border-rose-500/20 transition"
                     >
-                      Write-Off
+                      {t.inventory.damagedStock}
                     </button>
                   </td>
                 </tr>
@@ -373,7 +360,7 @@ export default function InventoryPage() {
               {filteredProducts.length === 0 && (
                 <tr>
                   <td colSpan={8} className="py-12 text-center text-xs text-zinc-500">
-                    No products found matching active filters.
+                    {t.inventory.noProducts}
                   </td>
                 </tr>
               )}
@@ -389,7 +376,7 @@ export default function InventoryPage() {
             <div className="flex items-center justify-between pb-4 border-b border-zinc-800 mb-4">
               <div className="flex items-center gap-2">
                 <Boxes className="w-5 h-5 text-indigo-500" />
-                <h3 className="text-base font-bold text-white">Add New Product to Catalog</h3>
+                <h3 className="text-base font-bold text-white">{t.inventory.createProduct}</h3>
               </div>
               <button
                 onClick={() => setIsAddModalOpen(false)}
@@ -409,12 +396,12 @@ export default function InventoryPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-semibold text-zinc-400 mb-1">
-                    SKU Code *
+                    {t.inventory.sku} *
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. LAP-MAC-01"
+                    placeholder="LAP-MAC-01"
                     value={newProduct.sku}
                     onChange={(e) => setNewProduct({ ...newProduct, sku: e.target.value })}
                     className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-mono text-white focus:outline-none focus:border-indigo-500"
@@ -423,11 +410,11 @@ export default function InventoryPage() {
 
                 <div>
                   <label className="block text-[11px] font-semibold text-zinc-400 mb-1">
-                    Barcode (EAN / UPC)
+                    {t.inventory.barcode}
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. 89345011"
+                    placeholder="89345011"
                     value={newProduct.barcode}
                     onChange={(e) => setNewProduct({ ...newProduct, barcode: e.target.value })}
                     className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-mono text-white focus:outline-none focus:border-indigo-500"
@@ -437,12 +424,12 @@ export default function InventoryPage() {
 
               <div>
                 <label className="block text-[11px] font-semibold text-zinc-400 mb-1">
-                  Product Name *
+                  {t.inventory.productName} *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Apple Studio Display 27-inch 5K"
+                  placeholder="Apple Studio Display 27-inch 5K"
                   value={newProduct.name}
                   onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
                   className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500"
@@ -452,14 +439,14 @@ export default function InventoryPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-semibold text-zinc-400 mb-1">
-                    Category
+                    {t.inventory.category}
                   </label>
                   <select
                     value={newProduct.categoryId}
                     onChange={(e) => setNewProduct({ ...newProduct, categoryId: e.target.value })}
                     className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs text-white focus:outline-none"
                   >
-                    <option value="">Select Category</option>
+                    <option value="">{t.inventory.allCategories}</option>
                     {categories.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.name}
@@ -470,7 +457,7 @@ export default function InventoryPage() {
 
                 <div>
                   <label className="block text-[11px] font-semibold text-zinc-400 mb-1">
-                    Initial Sellable Quantity
+                    {t.inventory.qtyAvailable}
                   </label>
                   <input
                     type="number"
@@ -487,7 +474,7 @@ export default function InventoryPage() {
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-[11px] font-semibold text-zinc-400 mb-1">
-                    Unit Cost ($)
+                    {t.inventory.unitCost}
                   </label>
                   <input
                     type="number"
@@ -504,7 +491,7 @@ export default function InventoryPage() {
 
                 <div>
                   <label className="block text-[11px] font-semibold text-zinc-400 mb-1">
-                    Selling Price ($) *
+                    {t.inventory.sellingPrice} *
                   </label>
                   <input
                     type="number"
@@ -522,7 +509,7 @@ export default function InventoryPage() {
 
                 <div>
                   <label className="block text-[11px] font-semibold text-zinc-400 mb-1">
-                    Reorder Alert Threshold
+                    {t.inventory.minThreshold}
                   </label>
                   <input
                     type="number"
@@ -539,7 +526,7 @@ export default function InventoryPage() {
               {/* WebP Image Compressor Upload */}
               <div>
                 <label className="block text-[11px] font-semibold text-zinc-400 mb-1">
-                  Product Image (WebP Compressed)
+                  {t.inventory.imageUrl}
                 </label>
                 <WebpUploader
                   defaultImageUrl={newProduct.imageUrl}
@@ -554,14 +541,14 @@ export default function InventoryPage() {
                   onClick={() => setIsAddModalOpen(false)}
                   className="flex-1 py-2.5 rounded-xl border border-zinc-700 text-zinc-300 hover:bg-zinc-800 text-xs font-semibold transition"
                 >
-                  Cancel
+                  {t.common.cancel}
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
                   className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-indigo-600/30 transition flex items-center justify-center gap-2"
                 >
-                  {isSubmitting ? 'Saving...' : 'Save Product'}
+                  {isSubmitting ? t.common.loading : t.inventory.saveProduct}
                 </button>
               </div>
             </form>
@@ -576,7 +563,7 @@ export default function InventoryPage() {
             <div className="flex items-center justify-between pb-4 border-b border-zinc-800 mb-4">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-rose-500" />
-                <h3 className="text-base font-bold text-white">Write Off Damaged Goods</h3>
+                <h3 className="text-base font-bold text-white">{t.damaged.logDamage}</h3>
               </div>
               <button
                 onClick={() => setIsWriteOffModalOpen(false)}
@@ -589,17 +576,17 @@ export default function InventoryPage() {
             <div className="mb-4 p-3 bg-zinc-800/80 rounded-xl border border-zinc-700/60 text-xs">
               <p className="font-bold text-white">{selectedProductForWriteOff.name}</p>
               <p className="text-zinc-400 font-mono mt-0.5">
-                Current Sellable Stock: {selectedProductForWriteOff.quantitySellable} units
+                {t.inventory.qtyAvailable}: {selectedProductForWriteOff.quantitySellable}
               </p>
               <p className="text-zinc-400 font-mono">
-                Cost Basis: ${selectedProductForWriteOff.unitCost.toFixed(2)} / unit
+                {t.inventory.unitCost}: {formatCurrency(selectedProductForWriteOff.unitCost)}
               </p>
             </div>
 
             <form onSubmit={handleWriteOffSubmit} className="space-y-4">
               <div>
                 <label className="block text-[11px] font-semibold text-zinc-400 mb-1">
-                  Quantity to Write-Off
+                  {t.damaged.qtyWrittenOff}
                 </label>
                 <input
                   type="number"
@@ -613,27 +600,23 @@ export default function InventoryPage() {
 
               <div>
                 <label className="block text-[11px] font-semibold text-zinc-400 mb-1">
-                  Reason for Write-Off
+                  {t.damaged.reason}
                 </label>
-                <select
+                <input
+                  type="text"
+                  required
                   value={writeOffReason}
                   onChange={(e) => setWriteOffReason(e.target.value)}
                   className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs text-white focus:outline-none"
-                >
-                  <option value="Damaged during storage/handling">Damaged during storage/handling</option>
-                  <option value="Factory defect / Dead on Arrival">Factory defect / Dead on Arrival</option>
-                  <option value="Water/Environmental damage">Water/Environmental damage</option>
-                  <option value="Expired / Obsolete scrap">Expired / Obsolete scrap</option>
-                </select>
+                />
               </div>
 
               <div>
                 <label className="block text-[11px] font-semibold text-zinc-400 mb-1">
-                  Investigation / Scrapping Notes
+                  {t.damaged.notes}
                 </label>
                 <textarea
                   rows={2}
-                  placeholder="Additional inspection details..."
                   value={writeOffNotes}
                   onChange={(e) => setWriteOffNotes(e.target.value)}
                   className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs text-white focus:outline-none"
@@ -641,9 +624,9 @@ export default function InventoryPage() {
               </div>
 
               <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-xs flex justify-between items-center text-rose-300">
-                <span>Total Net Financial Loss:</span>
+                <span>{t.damaged.costLoss}:</span>
                 <strong className="font-mono text-sm">
-                  ${(writeOffQty * selectedProductForWriteOff.unitCost).toFixed(2)}
+                  {formatCurrency(writeOffQty * selectedProductForWriteOff.unitCost)}
                 </strong>
               </div>
 
@@ -653,13 +636,13 @@ export default function InventoryPage() {
                   onClick={() => setIsWriteOffModalOpen(false)}
                   className="flex-1 py-2.5 rounded-xl border border-zinc-700 text-zinc-300 hover:bg-zinc-800 text-xs font-semibold"
                 >
-                  Cancel
+                  {t.common.cancel}
                 </button>
                 <button
                   type="submit"
                   className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-rose-600/30"
                 >
-                  Confirm Write-Off
+                  {t.damaged.submit}
                 </button>
               </div>
             </form>

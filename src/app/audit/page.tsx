@@ -2,14 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  History,
   ShieldCheck,
   Search,
-  Filter,
-  Eye,
   ChevronDown,
   ChevronUp,
-  Terminal,
 } from 'lucide-react';
 import { AuditLog } from '@/types';
 import { useI18nStore } from '@/store/i18nStore';
@@ -71,11 +67,11 @@ export default function AuditPage() {
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-indigo-500" />
             <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
-              Immutable System Audit Log (`audit_logs`)
+              {t.audit.title}
             </h1>
           </div>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-            Tamper-evident record of price overrides, returns approvals, stock adjustments, cost modifications, and transactions.
+            {t.audit.subtitle}
           </p>
         </div>
       </div>
@@ -83,13 +79,13 @@ export default function AuditPage() {
       {/* Filter and Search */}
       <div className="flex flex-col sm:flex-row items-center gap-3 bg-white dark:bg-zinc-900/90 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xs">
         <div className="relative flex-1 w-full">
-          <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-2.5" />
+          <Search className="w-4 h-4 text-zinc-400 absolute start-3.5 top-2.5" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by action, target entity ID, or user..."
-            className="w-full pl-10 pr-4 py-2 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/60 rounded-xl text-xs text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:border-indigo-500"
+            placeholder={t.audit.searchLogs}
+            className="w-full ps-10 pe-4 py-2 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/60 rounded-xl text-xs text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:border-indigo-500"
           />
         </div>
 
@@ -98,7 +94,7 @@ export default function AuditPage() {
           onChange={(e) => setSelectedAction(e.target.value)}
           className="w-full sm:w-56 py-2 px-3 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/60 rounded-xl text-xs text-zinc-700 dark:text-zinc-200 focus:outline-none"
         >
-          <option value="all">All Action Types ({logs.length})</option>
+          <option value="all">{t.audit.totalLogs} ({logs.length})</option>
           {actionTypes.map((act) => (
             <option key={act} value={act}>
               {act}
@@ -130,18 +126,18 @@ export default function AuditPage() {
                   </span>
                   <div>
                     <span className="font-mono font-bold text-zinc-900 dark:text-zinc-100">
-                      Target: {log.entityType} ({log.entityId || 'N/A'})
+                      {t.audit.entity}: {log.entityType} ({log.entityId || 'N/A'})
                     </span>
                     <p className="text-[11px] text-zinc-500 mt-0.5">
-                      User: <strong className="text-zinc-700 dark:text-zinc-300">{log.user?.fullName || 'System Event'}</strong>{' '}
-                      ({log.user?.role || 'Daemon'}) • IP: <span className="font-mono">{log.ipAddress}</span>
+                      {t.audit.user}: <strong className="text-zinc-700 dark:text-zinc-300">{log.user?.fullName || 'System'}</strong>{' '}
+                      • {t.audit.ipAddress}: <span className="font-mono">{log.ipAddress}</span>
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
                   <span className="font-mono text-zinc-400 text-[11px]">
-                    {new Date(log.createdAt).toLocaleString('en-US', {
+                    {new Date(log.createdAt).toLocaleString(undefined, {
                       month: 'short',
                       day: 'numeric',
                       year: 'numeric',
@@ -156,7 +152,7 @@ export default function AuditPage() {
                       onClick={() => setExpandedLogId(isExpanded ? null : log.id)}
                       className="flex items-center gap-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline px-2 py-1 rounded-md bg-indigo-500/10"
                     >
-                      <span>JSON Snapshot</span>
+                      <span>{t.audit.details}</span>
                       {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                     </button>
                   )}
@@ -169,17 +165,17 @@ export default function AuditPage() {
                   {/* Old Values */}
                   <div className="p-3 bg-zinc-950 rounded-xl border border-zinc-800 text-zinc-300">
                     <span className="text-[10px] uppercase font-bold text-rose-400 block mb-1.5">
-                      🔻 Old Values (Before Action):
+                      🔻 {t.audit.details} (Old):
                     </span>
                     <pre className="text-[11px] text-rose-300 overflow-x-auto whitespace-pre-wrap">
-                      {oldValObj ? JSON.stringify(oldValObj, null, 2) : 'null (New Record)'}
+                      {oldValObj ? JSON.stringify(oldValObj, null, 2) : 'null'}
                     </pre>
                   </div>
 
                   {/* New Values */}
                   <div className="p-3 bg-zinc-950 rounded-xl border border-zinc-800 text-zinc-300">
                     <span className="text-[10px] uppercase font-bold text-emerald-400 block mb-1.5">
-                      🟢 New Values (Committed State):
+                      🟢 {t.audit.details} (New):
                     </span>
                     <pre className="text-[11px] text-emerald-300 overflow-x-auto whitespace-pre-wrap">
                       {newValObj ? JSON.stringify(newValObj, null, 2) : 'null'}
@@ -193,7 +189,7 @@ export default function AuditPage() {
 
         {filteredLogs.length === 0 && (
           <div className="bg-white dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-12 text-center text-xs text-zinc-500">
-            No audit log entries matching filter.
+            {t.audit.noLogs}
           </div>
         )}
       </div>

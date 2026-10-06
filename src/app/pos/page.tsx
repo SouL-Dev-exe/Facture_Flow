@@ -10,17 +10,9 @@ import {
   Plus,
   Minus,
   CheckCircle2,
-  DollarSign,
-  CreditCard,
-  Building2,
-  Receipt,
   User,
-  Percent,
   Lock,
-  Printer,
-  Sparkles,
   AlertCircle,
-  KeyRound,
 } from 'lucide-react';
 import { usePosStore } from '@/store/posStore';
 import { useAuthStore } from '@/store/authStore';
@@ -43,13 +35,11 @@ export default function PosPage() {
     addToCart,
     updateItemQuantity,
     setItemPrice,
-    setItemDiscount,
     removeFromCart,
     clearCart,
     setSelectedClient,
     setGlobalDiscount,
     setPaymentMethod,
-    setNotes,
     getSubtotal,
     getItemDiscountTotal,
     getTaxTotal,
@@ -74,7 +64,6 @@ export default function PosPage() {
 
   // Price override modal state for individual items
   const [overrideItem, setOverrideItem] = useState<{ productId: string; currentPrice: number } | null>(null);
-  const [overrideInputPrice, setOverrideInputPrice] = useState<string>('');
 
   const fetchPosData = async () => {
     try {
@@ -87,7 +76,6 @@ export default function PosPage() {
 
       if (prodData.success) {
         setProducts(prodData.products);
-        // Extract unique categories
         const cats: Category[] = [];
         prodData.products.forEach((p: Product) => {
           if (p.category && !cats.find((c) => c.id === p.category?.id)) {
@@ -121,24 +109,21 @@ export default function PosPage() {
   const handleAddToCart = (product: Product) => {
     const res = addToCart(product, 1);
     if (!res.success) {
-      setErrorMessage(res.message || 'Cannot add to cart');
+      setErrorMessage(res.message || t.pos.insufficientStock);
       setTimeout(() => setErrorMessage(null), 3000);
     }
   };
 
   const handlePriceOverrideClick = (productId: string, currentPrice: number) => {
-    // If Cashier, lock and prompt Manager PIN
     if (currentUser.role === 'cashier') {
       setOverrideItem({ productId, currentPrice });
-      setOverrideInputPrice(currentPrice.toString());
       openManagerPinModal({
         type: 'price_override',
         productId,
         newPrice: currentPrice,
       });
     } else {
-      // Manager/Admin can directly edit
-      const newPriceStr = prompt('Enter authorized custom retail price ($):', currentPrice.toString());
+      const newPriceStr = prompt(`${t.pos.unitPriceOverride} (${t.common.currency}):`, currentPrice.toString());
       if (newPriceStr && !isNaN(Number(newPriceStr))) {
         setItemPrice(productId, Number(newPriceStr), true);
       }
@@ -187,7 +172,6 @@ export default function PosPage() {
 
       const data = await res.json();
       if (data.success && data.facture) {
-        // Trigger celebratory confetti effect
         try {
           confetti({
             particleCount: 80,
@@ -199,14 +183,13 @@ export default function PosPage() {
         setCompletedFacture(data.facture);
         clearCart();
         setIsPrintModalOpen(true);
-        // Refresh catalog to update stock numbers
         fetchPosData();
       } else {
-        setErrorMessage(data.message || 'Checkout failed');
+        setErrorMessage(data.message || t.common.error);
         setTimeout(() => setErrorMessage(null), 4000);
       }
     } catch (err: any) {
-      setErrorMessage(err.message || 'Server error on checkout');
+      setErrorMessage(err.message || t.common.error);
       setTimeout(() => setErrorMessage(null), 4000);
     } finally {
       setIsProcessingCheckout(false);
@@ -220,18 +203,18 @@ export default function PosPage() {
         {/* Top Controls: Search & Barcode Trigger */}
         <div className="flex items-center gap-3 mb-4">
           <div className="relative flex-1">
-            <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-3" />
+            <Search className="w-4 h-4 text-zinc-400 absolute start-3.5 top-3" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search products by name, SKU, or scan barcode..."
-              className="w-full pl-10 pr-4 py-2 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-xs text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:border-indigo-500 transition"
+              placeholder={t.pos.searchScan}
+              className="w-full ps-10 pe-4 py-2 bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/80 rounded-xl text-xs text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:border-indigo-500 transition"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-2.5 text-xs text-zinc-400 hover:text-zinc-200"
+                className="absolute end-3 top-2.5 text-xs text-zinc-400 hover:text-zinc-200"
               >
                 ✕
               </button>
@@ -243,7 +226,7 @@ export default function PosPage() {
             className="flex items-center gap-2 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-md shadow-indigo-600/30 transition shrink-0"
           >
             <ScanBarcode className="w-4 h-4" />
-            <span className="hidden sm:inline">Barcode Scanner</span>
+            <span className="hidden sm:inline">{t.inventory.barcode}</span>
           </button>
         </div>
 
@@ -258,7 +241,7 @@ export default function PosPage() {
                 : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
             }`}
           >
-            All Items ({products.length})
+            {t.pos.allProducts} ({products.length})
           </button>
           {categories.map((cat) => (
             <button
@@ -278,14 +261,14 @@ export default function PosPage() {
 
         {/* Error Alert Message */}
         {errorMessage && (
-          <div className="mb-3 p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 text-xs flex items-center gap-2 shrink-0 animate-in fade-in">
+          <div className="mb-3 p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 text-xs flex items-center gap-2 shrink-0">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{errorMessage}</span>
           </div>
         )}
 
         {/* Product Cards Grid */}
-        <div className="flex-1 overflow-y-auto pr-1 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
+        <div className="flex-1 overflow-y-auto pe-1 grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
           {filteredProducts.map((prod) => {
             const isOutOfStock = prod.quantitySellable <= 0;
             return (
@@ -293,7 +276,7 @@ export default function PosPage() {
                 key={prod.id}
                 disabled={isOutOfStock}
                 onClick={() => handleAddToCart(prod)}
-                className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all group relative overflow-hidden ${
+                className={`p-3 rounded-xl border text-start flex flex-col justify-between transition-all group relative overflow-hidden ${
                   isOutOfStock
                     ? 'opacity-40 cursor-not-allowed bg-zinc-100 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800'
                     : 'bg-zinc-50 dark:bg-zinc-800/60 hover:bg-zinc-100 dark:hover:bg-zinc-800 border-zinc-200 dark:border-zinc-700/60 hover:border-indigo-500/50 hover:shadow-md'
@@ -310,10 +293,10 @@ export default function PosPage() {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-zinc-400 text-xs font-mono">
-                      No Image
+                      {prod.sku}
                     </div>
                   )}
-                  <div className="absolute top-1 right-1">
+                  <div className="absolute top-1 end-1">
                     <StockBadge quantity={prod.quantitySellable} minThreshold={prod.minStockThreshold} />
                   </div>
                 </div>
@@ -329,7 +312,7 @@ export default function PosPage() {
 
                 <div className="mt-3 pt-2 border-t border-zinc-200 dark:border-zinc-700/60 flex items-center justify-between">
                   <span className="text-xs font-black font-mono text-indigo-600 dark:text-indigo-400">
-                    ${prod.sellingPrice.toFixed(2)}
+                    {formatCurrency(prod.sellingPrice)}
                   </span>
                   <span className="w-6 h-6 rounded-lg bg-indigo-500/10 text-indigo-500 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center transition">
                     <Plus className="w-3.5 h-3.5" />
@@ -341,7 +324,7 @@ export default function PosPage() {
 
           {filteredProducts.length === 0 && (
             <div className="col-span-full py-12 text-center text-xs text-zinc-500">
-              No products found matching your search.
+              {t.inventory.noProducts}
             </div>
           )}
         </div>
@@ -355,11 +338,11 @@ export default function PosPage() {
             <div className="flex items-center gap-2">
               <ShoppingCart className="w-4 h-4 text-indigo-500" />
               <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
-                Active Order Cart
+                {t.pos.cart}
               </h3>
             </div>
             <span className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-indigo-500/10 text-indigo-500 border border-indigo-500/20">
-              {getItemCount()} items
+              {getItemCount()} {t.common.items}
             </span>
           </div>
 
@@ -384,7 +367,7 @@ export default function PosPage() {
         </div>
 
         {/* Cart Items List with Stock Safety Guard */}
-        <div className="flex-1 overflow-y-auto py-3 space-y-2.5 pr-1">
+        <div className="flex-1 overflow-y-auto py-3 space-y-2.5 pe-1">
           {cart.map((item) => {
             const isOverMax = item.quantity >= item.product.quantitySellable;
 
@@ -394,17 +377,17 @@ export default function PosPage() {
                 className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/60 flex flex-col gap-2"
               >
                 <div className="flex items-start justify-between">
-                  <div className="min-w-0 pr-2">
+                  <div className="min-w-0 pe-2">
                     <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate">
                       {item.product.name}
                     </p>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="text-[10px] font-mono text-zinc-400">
-                        Max Stock: {item.product.quantitySellable}
+                        {t.inventory.qtyAvailable}: {item.product.quantitySellable}
                       </span>
                       {item.isPriceOverridden && (
                         <span className="text-[9px] px-1.5 rounded bg-amber-500/20 text-amber-400 font-bold border border-amber-500/30">
-                          Manager Override
+                          {t.pos.unitPriceOverride}
                         </span>
                       )}
                     </div>
@@ -421,16 +404,15 @@ export default function PosPage() {
                 {/* Price, Discount, and Quantity Stepper */}
                 <div className="flex items-center justify-between text-xs pt-1 border-t border-zinc-200 dark:border-zinc-700/40">
                   <div className="flex items-center gap-2">
-                    {/* Unit Price Button (Triggers Manager PIN if Cashier) */}
                     <button
                       type="button"
                       onClick={() =>
                         handlePriceOverrideClick(item.product.id, item.unitPrice)
                       }
-                      title="Click to override item price (requires Manager PIN for Cashiers)"
+                      title={t.pos.unitPriceOverride}
                       className="font-mono font-bold text-zinc-800 dark:text-zinc-200 hover:text-indigo-500 flex items-center gap-1 group"
                     >
-                      <span>${item.unitPrice.toFixed(2)}</span>
+                      <span>{formatCurrency(item.unitPrice)}</span>
                       {currentUser.role === 'cashier' && (
                         <Lock className="w-2.5 h-2.5 text-zinc-400 group-hover:text-amber-400" />
                       )}
@@ -464,9 +446,9 @@ export default function PosPage() {
           {cart.length === 0 && (
             <div className="h-full flex flex-col items-center justify-center text-center py-12 text-zinc-400">
               <ShoppingCart className="w-10 h-10 mb-2 opacity-30" />
-              <p className="text-xs font-semibold">Cart is currently empty</p>
+              <p className="text-xs font-semibold">{t.pos.emptyCart}</p>
               <p className="text-[11px] text-zinc-500 mt-0.5">
-                Click products on the left or scan barcodes to begin
+                {t.pos.startScanning}
               </p>
             </div>
           )}
@@ -476,31 +458,31 @@ export default function PosPage() {
         <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800 space-y-2">
           {/* Global Discount Input */}
           <div className="flex items-center justify-between text-xs">
-            <span className="text-zinc-500">Cart Discount ($):</span>
+            <span className="text-zinc-500">{t.pos.discountLabel}:</span>
             <input
               type="number"
               min="0"
               value={globalDiscount || ''}
               onChange={(e) => setGlobalDiscount(Number(e.target.value) || 0)}
               placeholder="0.00"
-              className="w-20 px-2 py-1 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-right font-mono text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none"
+              className="w-20 px-2 py-1 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg text-end font-mono text-xs text-zinc-900 dark:text-zinc-100 focus:outline-none"
             />
           </div>
 
           <div className="flex justify-between text-xs text-zinc-500">
-            <span>Subtotal HT:</span>
-            <span className="font-mono font-medium">${getSubtotal().toFixed(2)}</span>
+            <span>{t.pos.subtotal}:</span>
+            <span className="font-mono font-medium">{formatCurrency(getSubtotal())}</span>
           </div>
 
           <div className="flex justify-between text-xs text-zinc-500">
-            <span>TVA Tax (20%):</span>
-            <span className="font-mono font-medium">${getTaxTotal().toFixed(2)}</span>
+            <span>{t.pos.tax}:</span>
+            <span className="font-mono font-medium">{formatCurrency(getTaxTotal())}</span>
           </div>
 
           <div className="flex justify-between text-base font-black border-t border-zinc-200 dark:border-zinc-800 pt-2 text-zinc-900 dark:text-white">
-            <span>TOTAL TTC:</span>
+            <span>{t.pos.grandTotal}:</span>
             <span className="font-mono text-indigo-600 dark:text-indigo-400">
-              ${getTotalAmount().toFixed(2)}
+              {formatCurrency(getTotalAmount())}
             </span>
           </div>
 
@@ -517,7 +499,7 @@ export default function PosPage() {
                     : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                 }`}
               >
-                {method === 'bank_transfer' ? 'Transfer' : method}
+                {t.pos[method === 'cheque' ? 'check' : method === 'bank_transfer' ? 'bankTransfer' : method] || method}
               </button>
             ))}
           </div>
@@ -534,7 +516,7 @@ export default function PosPage() {
             ) : (
               <>
                 <CheckCircle2 className="w-4 h-4" />
-                Complete Sale & Print Facture
+                {t.pos.createFacture}
               </>
             )}
           </button>
@@ -554,12 +536,12 @@ export default function PosPage() {
       <ManagerPinModal
         isOpen={isManagerPinModalOpen}
         onClose={closeManagerPinModal}
-        title="Manager Price Override"
-        description="Cashier role requires Manager authorization to modify item retail pricing or discount limits."
+        title={t.managerPin.title}
+        description={t.managerPin.desc}
         onSuccess={(authManager) => {
           if (overrideItem) {
             const entered = prompt(
-              `Manager PIN authorized by ${authManager.fullName}.\nEnter custom price ($):`,
+              `${t.managerPin.title} (${authManager.fullName}).\n${t.pos.unitPriceOverride} (${t.common.currency}):`,
               overrideItem.currentPrice.toString()
             );
             if (entered && !isNaN(Number(entered))) {

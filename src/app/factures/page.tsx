@@ -2,18 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  FileSpreadsheet,
   Search,
   Printer,
   RotateCcw,
-  CheckCircle2,
-  AlertTriangle,
   X,
-  FileText,
-  DollarSign,
-  ShieldCheck,
 } from 'lucide-react';
-import { Facture, Product } from '@/types';
+import { Facture } from '@/types';
 import { PrintableInvoice } from '@/components/PrintableInvoice';
 import { ManagerPinModal } from '@/components/ManagerPinModal';
 import { useAuthStore } from '@/store/authStore';
@@ -135,10 +129,10 @@ export default function FacturesPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
-            Factures & Billing Engine
+            {t.factures.title}
           </h1>
           <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            Search invoices, generate official A4 documents, 80mm receipts, and approve returns/credit notes.
+            {t.factures.subtitle}
           </p>
         </div>
       </div>
@@ -146,13 +140,13 @@ export default function FacturesPage() {
       {/* Search & Filter Bar */}
       <div className="flex flex-col md:flex-row items-center gap-3 bg-white dark:bg-zinc-900/90 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xs">
         <div className="relative flex-1 w-full">
-          <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-2.5" />
+          <Search className="w-4 h-4 text-zinc-400 absolute start-3.5 top-2.5" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by invoice number (e.g. FAC-2024-...) or client name..."
-            className="w-full pl-10 pr-4 py-2 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/60 rounded-xl text-xs text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:border-indigo-500"
+            placeholder={t.factures.searchInvoices}
+            className="w-full ps-10 pe-4 py-2 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/60 rounded-xl text-xs text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none focus:border-indigo-500"
           />
         </div>
 
@@ -169,7 +163,7 @@ export default function FacturesPage() {
                   : 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-300'
               }`}
             >
-              {status}
+              {status === 'all' ? t.factures.filterAll : t.factures[status as keyof typeof t.factures] || status}
             </button>
           ))}
         </div>
@@ -178,18 +172,18 @@ export default function FacturesPage() {
       {/* Factures List Table */}
       <div className="bg-white dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+          <table className="w-full text-start text-xs">
             <thead>
               <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50 text-zinc-500 dark:text-zinc-400 uppercase text-[10px] font-bold tracking-wider">
-                <th className="py-3 px-4">Invoice #</th>
-                <th className="py-3 px-4">Client</th>
-                <th className="py-3 px-4">Date</th>
-                <th className="py-3 px-4">Items</th>
-                <th className="py-3 px-4 text-right">Subtotal HT</th>
-                <th className="py-3 px-4 text-right">TVA (20%)</th>
-                <th className="py-3 px-4 text-right">Total TTC</th>
-                <th className="py-3 px-4 text-center">Status</th>
-                <th className="py-3 px-4 text-right">Actions</th>
+                <th className="py-3 px-4">{t.factures.invoiceNo}</th>
+                <th className="py-3 px-4">{t.factures.client}</th>
+                <th className="py-3 px-4">{t.factures.date}</th>
+                <th className="py-3 px-4">{t.common.items}</th>
+                <th className="py-3 px-4 text-end">{t.pos.subtotal}</th>
+                <th className="py-3 px-4 text-end">{t.pos.tax}</th>
+                <th className="py-3 px-4 text-end">{t.factures.amount}</th>
+                <th className="py-3 px-4 text-center">{t.factures.status}</th>
+                <th className="py-3 px-4 text-end">{t.factures.actions}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800/60">
@@ -198,51 +192,43 @@ export default function FacturesPage() {
                   key={fac.id}
                   className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors"
                 >
-                  {/* Invoice # */}
                   <td className="py-3 px-4 font-mono font-bold text-indigo-600 dark:text-indigo-400">
                     {fac.invoiceNumber}
                   </td>
 
-                  {/* Client */}
                   <td className="py-3 px-4">
                     <p className="font-semibold text-zinc-900 dark:text-zinc-100">
-                      {fac.client?.name || 'Walk-in Retail Client'}
+                      {fac.client?.name || t.pos.walkInCustomer}
                     </p>
                     <span className="text-[10px] font-mono text-zinc-400">
-                      {fac.paymentMethod.toUpperCase()}
+                      {t.pos[fac.paymentMethod as keyof typeof t.pos] || fac.paymentMethod}
                     </span>
                   </td>
 
-                  {/* Date */}
                   <td className="py-3 px-4 text-zinc-500 font-mono text-[11px]">
-                    {new Date(fac.createdAt).toLocaleDateString('en-US', {
+                    {new Date(fac.createdAt).toLocaleDateString(undefined, {
                       month: 'short',
                       day: 'numeric',
                       year: 'numeric',
                     })}
                   </td>
 
-                  {/* Items Count */}
                   <td className="py-3 px-4 font-mono text-zinc-700 dark:text-zinc-300">
-                    {fac.items.length} items
+                    {fac.items.length} {t.common.items}
                   </td>
 
-                  {/* Subtotal */}
-                  <td className="py-3 px-4 text-right font-mono text-zinc-500">
-                    ${fac.subtotal.toFixed(2)}
+                  <td className="py-3 px-4 text-end font-mono text-zinc-500">
+                    {formatCurrency(fac.subtotal)}
                   </td>
 
-                  {/* TVA */}
-                  <td className="py-3 px-4 text-right font-mono text-zinc-500">
-                    ${fac.taxAmount.toFixed(2)}
+                  <td className="py-3 px-4 text-end font-mono text-zinc-500">
+                    {formatCurrency(fac.taxAmount)}
                   </td>
 
-                  {/* Total Amount */}
-                  <td className="py-3 px-4 text-right font-mono font-black text-zinc-900 dark:text-white">
-                    ${fac.totalAmount.toFixed(2)}
+                  <td className="py-3 px-4 text-end font-mono font-black text-zinc-900 dark:text-white">
+                    {formatCurrency(fac.totalAmount)}
                   </td>
 
-                  {/* Status Badge */}
                   <td className="py-3 px-4 text-center">
                     <span
                       className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
@@ -253,18 +239,17 @@ export default function FacturesPage() {
                           : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
                       }`}
                     >
-                      {fac.status}
+                      {t.factures[fac.status as keyof typeof t.factures] || fac.status}
                     </span>
                   </td>
 
-                  {/* Actions */}
-                  <td className="py-3 px-4 text-right">
+                  <td className="py-3 px-4 text-end">
                     <div className="flex items-center justify-end gap-2">
                       <button
                         type="button"
                         onClick={() => setSelectedFactureForPrint(fac)}
                         className="p-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 transition"
-                        title="Print A4 / Thermal Receipt"
+                        title={t.factures.printInvoice}
                       >
                         <Printer className="w-3.5 h-3.5" />
                       </button>
@@ -276,7 +261,7 @@ export default function FacturesPage() {
                           className="px-2 py-1 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 border border-rose-500/20 rounded-lg text-[11px] font-semibold transition flex items-center gap-1"
                         >
                           <RotateCcw className="w-3 h-3" />
-                          Return (Avoir)
+                          {t.creditNotes.newCreditNote}
                         </button>
                       )}
                     </div>
@@ -287,7 +272,7 @@ export default function FacturesPage() {
               {filteredFactures.length === 0 && (
                 <tr>
                   <td colSpan={9} className="py-12 text-center text-xs text-zinc-500">
-                    No invoices found matching your query.
+                    {t.factures.noFactures}
                   </td>
                 </tr>
               )}
@@ -304,9 +289,9 @@ export default function FacturesPage() {
               <div className="flex items-center gap-2">
                 <RotateCcw className="w-5 h-5 text-rose-500" />
                 <div>
-                  <h3 className="text-base font-bold text-white">Create Credit Note (Avoir)</h3>
+                  <h3 className="text-base font-bold text-white">{t.creditNotes.newCreditNote}</h3>
                   <span className="text-xs text-zinc-400 font-mono">
-                    Linked to: {returnFacture.invoiceNumber}
+                    {t.creditNotes.relatedInvoice}: {returnFacture.invoiceNumber}
                   </span>
                 </div>
               </div>
@@ -321,7 +306,7 @@ export default function FacturesPage() {
             <form onSubmit={handleProcessReturn} className="space-y-4">
               <div className="space-y-3">
                 <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider block">
-                  Select Items & Smart Stock Destination:
+                  {t.creditNotes.destination}:
                 </span>
 
                 {returnFacture.items.map((it) => {
@@ -337,16 +322,16 @@ export default function FacturesPage() {
                       className="p-3 bg-zinc-800/70 rounded-xl border border-zinc-700/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs"
                     >
                       <div className="min-w-0">
-                        <p className="font-bold text-white truncate">{it.product?.name}</p>
+                        <p className="font-bold text-white truncate">{it.product?.name || t.inventory.product}</p>
                         <p className="text-[10px] font-mono text-zinc-400">
-                          Original Qty: {it.quantity} | Unit Price: ${it.unitPrice.toFixed(2)}
+                          {t.pos.qty}: {it.quantity} | {t.pos.price}: {formatCurrency(it.unitPrice)}
                         </p>
                       </div>
 
                       <div className="flex items-center gap-3">
                         {/* Return Qty */}
                         <div className="flex items-center gap-1.5">
-                          <label className="text-[10px] text-zinc-400">Return Qty:</label>
+                          <label className="text-[10px] text-zinc-400">{t.pos.qty}:</label>
                           <input
                             type="number"
                             min="0"
@@ -365,7 +350,7 @@ export default function FacturesPage() {
 
                         {/* Stock Destination Routing */}
                         <div className="flex items-center gap-1.5">
-                          <label className="text-[10px] text-zinc-400">Route To:</label>
+                          <label className="text-[10px] text-zinc-400">{t.creditNotes.destination}:</label>
                           <select
                             value={state.restockDestination}
                             onChange={(e) => {
@@ -379,8 +364,8 @@ export default function FacturesPage() {
                             }}
                             className="px-2 py-1 bg-zinc-900 border border-zinc-700 rounded-lg text-xs font-semibold text-white focus:outline-none"
                           >
-                            <option value="sellable">🟢 Sellable Stock (+N)</option>
-                            <option value="damaged">🔴 Damaged Pool (+N)</option>
+                            <option value="sellable">🟢 {t.creditNotes.sellable}</option>
+                            <option value="damaged">🔴 {t.creditNotes.damaged}</option>
                           </select>
                         </div>
                       </div>
@@ -391,7 +376,7 @@ export default function FacturesPage() {
 
               <div>
                 <label className="block text-[11px] font-semibold text-zinc-400 mb-1">
-                  Reason for Return
+                  {t.creditNotes.reason}
                 </label>
                 <input
                   type="text"
@@ -403,12 +388,14 @@ export default function FacturesPage() {
               </div>
 
               <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-xs flex justify-between items-center text-rose-300">
-                <span>Total Refund Credit Amount:</span>
+                <span>{t.creditNotes.refundAmount}:</span>
                 <strong className="font-mono text-base font-black">
-                  $
-                  {Object.values(returnItems)
-                    .reduce((acc, i) => acc + i.quantityReturned * i.unitRefundPrice, 0)
-                    .toFixed(2)}
+                  {formatCurrency(
+                    Object.values(returnItems).reduce(
+                      (acc, i) => acc + i.quantityReturned * i.unitRefundPrice,
+                      0
+                    )
+                  )}
                 </strong>
               </div>
 
@@ -418,14 +405,14 @@ export default function FacturesPage() {
                   onClick={() => setReturnFacture(null)}
                   className="flex-1 py-2.5 rounded-xl border border-zinc-700 text-zinc-300 hover:bg-zinc-800 text-xs font-semibold"
                 >
-                  Cancel
+                  {t.common.cancel}
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmittingReturn}
                   className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-rose-600/30"
                 >
-                  {isSubmittingReturn ? 'Generating Avoir...' : 'Approve Credit Note (Avoir)'}
+                  {isSubmittingReturn ? t.common.loading : t.creditNotes.newCreditNote}
                 </button>
               </div>
             </form>
@@ -444,8 +431,8 @@ export default function FacturesPage() {
       <ManagerPinModal
         isOpen={isPinModalOpen}
         onClose={() => setIsPinModalOpen(false)}
-        title="Manager Approval for Return"
-        description="Approving product returns and issuing official Credit Notes requires Manager authorization."
+        title={t.managerPin.title}
+        description={t.managerPin.desc}
         onSuccess={() => {
           setIsPinModalOpen(false);
           if (selectedFactureForPrint) {

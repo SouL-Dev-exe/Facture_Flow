@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Lock, ShieldAlert, KeyRound, CheckCircle2, X } from 'lucide-react';
+import { Lock, ShieldAlert, KeyRound, X } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
+import { useI18nStore } from '@/store/i18nStore';
 
 interface ManagerPinModalProps {
   isOpen: boolean;
@@ -16,13 +17,17 @@ export const ManagerPinModal: React.FC<ManagerPinModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
-  title = 'Manager Authorization Required',
-  description = 'This privileged action requires a Manager or Admin PIN code.',
+  title,
+  description,
 }) => {
+  const { t } = useI18nStore();
   const [pin, setPin] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { verifyPinCode } = useAuthStore();
+
+  const modalTitle = title || t.managerPin.title;
+  const modalDesc = description || t.managerPin.desc;
 
   if (!isOpen) return null;
 
@@ -46,7 +51,7 @@ export const ManagerPinModal: React.FC<ManagerPinModalProps> = ({
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!pin) {
-      setError('Please enter your 4-digit PIN');
+      setError(t.auth.enterCredential);
       return;
     }
 
@@ -60,10 +65,10 @@ export const ManagerPinModal: React.FC<ManagerPinModalProps> = ({
         setPin('');
         onClose();
       } else {
-        setError(result.message || 'Invalid PIN code. Access denied.');
+        setError(result.message || t.managerPin.invalidPin);
       }
     } catch (err: any) {
-      setError('Authorization error. Please try again.');
+      setError(t.common.error);
     } finally {
       setIsLoading(false);
     }
@@ -75,7 +80,7 @@ export const ManagerPinModal: React.FC<ManagerPinModalProps> = ({
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-200 p-1 rounded-lg hover:bg-zinc-800 transition"
+          className="absolute top-4 end-4 text-zinc-400 hover:text-zinc-200 p-1 rounded-lg hover:bg-zinc-800 transition"
         >
           <X className="w-5 h-5" />
         </button>
@@ -86,15 +91,15 @@ export const ManagerPinModal: React.FC<ManagerPinModalProps> = ({
             <Lock className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-zinc-100">{title}</h3>
-            <p className="text-xs text-zinc-400">{description}</p>
+            <h3 className="text-lg font-semibold text-zinc-100">{modalTitle}</h3>
+            <p className="text-xs text-zinc-400">{modalDesc}</p>
           </div>
         </div>
 
-        {/* Demo Helper Hint */}
+        {/* Helper Hint */}
         <div className="mb-5 p-2.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-xs text-indigo-300 flex items-center justify-between">
-          <span>💡 Quick Demo PINs:</span>
-          <span className="font-mono text-zinc-200">Manager: <strong>9999</strong> | Admin: <strong>1234</strong></span>
+          <span>💡 {t.auth.defaultCredentials}</span>
+          <span className="font-mono text-zinc-200">Manager: <strong>2222</strong> | Admin: <strong>1111</strong></span>
         </div>
 
         {/* PIN Display */}
@@ -141,7 +146,7 @@ export const ManagerPinModal: React.FC<ManagerPinModalProps> = ({
             onClick={handleClear}
             className="py-3 text-xs font-semibold rounded-xl bg-zinc-800/50 hover:bg-zinc-700/50 text-zinc-400 border border-zinc-700/40 transition-all"
           >
-            CLEAR
+            {t.common.cancel.toUpperCase()}
           </button>
           <button
             type="button"
@@ -166,7 +171,7 @@ export const ManagerPinModal: React.FC<ManagerPinModalProps> = ({
             onClick={onClose}
             className="flex-1 py-2.5 rounded-xl border border-zinc-700 text-zinc-300 hover:bg-zinc-800 text-sm font-medium transition"
           >
-            Cancel
+            {t.common.cancel}
           </button>
           <button
             type="button"
@@ -179,7 +184,7 @@ export const ManagerPinModal: React.FC<ManagerPinModalProps> = ({
             ) : (
               <>
                 <KeyRound className="w-4 h-4" />
-                Authorize Action
+                {t.managerPin.confirm}
               </>
             )}
           </button>

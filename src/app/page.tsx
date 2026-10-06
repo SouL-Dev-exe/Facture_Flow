@@ -9,12 +9,8 @@ import {
   ShoppingCart,
   AlertTriangle,
   ArrowUpRight,
-  ArrowDownRight,
   ShieldCheck,
   Zap,
-  Calendar,
-  Layers,
-  Sparkles,
 } from 'lucide-react';
 import {
   AreaChart,
@@ -24,8 +20,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  BarChart,
-  Bar,
 } from 'recharts';
 import { AnalyticsSummary, Facture, Product, AuditLog } from '@/types';
 import { StockBadge } from '@/components/StockBadge';
@@ -82,7 +76,7 @@ export default function DashboardPage() {
     { month: 'Jul', valuation: 98000, cost: 73000 },
     { month: 'Aug', valuation: 106000, cost: 79000 },
     { month: 'Sep', valuation: 118000, cost: 87000 },
-    { month: 'Oct (Now)', valuation: analytics?.totalRetailValuation || 124350, cost: analytics?.totalInventoryCost || 92840 },
+    { month: 'Oct', valuation: analytics?.totalRetailValuation || 124350, cost: analytics?.totalInventoryCost || 92840 },
   ];
 
   return (
@@ -92,15 +86,19 @@ export default function DashboardPage() {
         <div>
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
-              Enterprise Dashboard
+              {t.dashboard.enterpriseBadge}
             </span>
-            <span className="text-xs text-zinc-400">Live POS & Inventory Overview</span>
+            <span className="text-xs text-zinc-400">{t.dashboard.subtitle}</span>
           </div>
           <h1 className="text-2xl font-black tracking-tight text-white mt-1">
-            Welcome back, {currentUser.fullName}
+            {t.dashboard.welcome}, {currentUser.fullName}
           </h1>
           <p className="text-xs text-zinc-400 mt-0.5">
-            Active as <strong className="text-indigo-400 capitalize">{currentUser.role}</strong>. Real-time valuation, stock health, and POS sales.
+            {t.header.currentlyActive}{' '}
+            <strong className="text-indigo-400">
+              {t.roles[currentUser.role as keyof typeof t.roles] || currentUser.role}
+            </strong>
+            . {t.dashboard.overviewDesc}
           </p>
         </div>
 
@@ -110,14 +108,14 @@ export default function DashboardPage() {
             className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-indigo-600/30 transition group"
           >
             <ShoppingCart className="w-4 h-4 group-hover:scale-110 transition-transform" />
-            Open POS Terminal
+            {t.dashboard.quickPos}
           </Link>
           <Link
             href="/inventory"
             className="flex items-center gap-2 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-xl text-xs font-semibold transition"
           >
             <Boxes className="w-4 h-4" />
-            Manage Stock
+            {t.dashboard.addStock}
           </Link>
         </div>
       </div>
@@ -125,10 +123,10 @@ export default function DashboardPage() {
       {/* Financial Metric Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Total Retail Valuation */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 shadow-sm relative overflow-hidden group">
+        <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 shadow-xs relative overflow-hidden group">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-              Total Stock Valuation
+              {t.dashboard.stockValuation}
             </span>
             <div className="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
               <DollarSign className="w-4 h-4" />
@@ -136,23 +134,23 @@ export default function DashboardPage() {
           </div>
           <div className="mt-3">
             <h3 className="text-2xl font-black tracking-tight font-mono text-zinc-900 dark:text-white">
-              ${analytics?.totalRetailValuation.toLocaleString() || '124,350.00'}
+              {formatCurrency(analytics?.totalRetailValuation || 124350)}
             </h3>
             <div className="flex items-center gap-1.5 mt-2 text-xs">
               <span className="flex items-center text-emerald-500 font-bold">
                 <ArrowUpRight className="w-3.5 h-3.5" />
                 +{analytics?.yoyValuationGrowth || 24.5}%
               </span>
-              <span className="text-zinc-400 text-[11px]">vs. same day last year (YoY)</span>
+              <span className="text-zinc-400 text-[11px]">YoY</span>
             </div>
           </div>
         </div>
 
         {/* Card 2: Total Inventory Cost */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 shadow-sm relative overflow-hidden">
+        <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 shadow-xs relative overflow-hidden">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-              Total Inventory Cost
+              {t.dashboard.totalCost}
             </span>
             <div className="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center">
               <Boxes className="w-4 h-4" />
@@ -160,21 +158,21 @@ export default function DashboardPage() {
           </div>
           <div className="mt-3">
             <h3 className="text-2xl font-black tracking-tight font-mono text-zinc-900 dark:text-white">
-              ${analytics?.totalInventoryCost.toLocaleString() || '92,840.00'}
+              {formatCurrency(analytics?.totalInventoryCost || 92840)}
             </h3>
             <div className="flex items-center gap-1.5 mt-2 text-xs">
               <span className="font-mono text-zinc-500 dark:text-zinc-400">
-                {analytics?.totalStockQuantity || 145} units in sellable stock
+                {analytics?.totalStockQuantity || 145} {t.common.items}
               </span>
             </div>
           </div>
         </div>
 
         {/* Card 3: Unrealized Profit Margin */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 shadow-sm relative overflow-hidden">
+        <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 shadow-xs relative overflow-hidden">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-              Unrealized Margin
+              {t.dashboard.unrealizedMargin}
             </span>
             <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
               <TrendingUp className="w-4 h-4" />
@@ -182,22 +180,22 @@ export default function DashboardPage() {
           </div>
           <div className="mt-3">
             <h3 className="text-2xl font-black tracking-tight font-mono text-emerald-600 dark:text-emerald-400">
-              ${analytics?.unrealizedProfit.toLocaleString() || '31,510.00'}
+              {formatCurrency(analytics?.unrealizedProfit || 31510)}
             </h3>
             <div className="flex items-center gap-1.5 mt-2 text-xs">
               <span className="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold text-[10px]">
-                {analytics?.unrealizedProfitMargin || 25.3}% Net Margin
+                {analytics?.unrealizedProfitMargin || 25.3}%
               </span>
-              <span className="text-zinc-400 text-[11px]">projected return</span>
+              <span className="text-zinc-400 text-[11px]">{t.dashboard.grossProfit}</span>
             </div>
           </div>
         </div>
 
         {/* Card 4: Today's POS Invoices */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 shadow-sm relative overflow-hidden">
+        <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 shadow-xs relative overflow-hidden">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-              Today's POS Sales
+              {t.dashboard.todaySales}
             </span>
             <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
               <Zap className="w-4 h-4" />
@@ -205,13 +203,12 @@ export default function DashboardPage() {
           </div>
           <div className="mt-3">
             <h3 className="text-2xl font-black tracking-tight font-mono text-zinc-900 dark:text-white">
-              ${analytics?.todaySalesTotal.toLocaleString() || '2,876.40'}
+              {formatCurrency(analytics?.todaySalesTotal || 2876.40)}
             </h3>
             <div className="flex items-center gap-1.5 mt-2 text-xs">
               <span className="font-mono text-indigo-500 font-bold">
-                {analytics?.todayInvoicesCount || 3} invoices
+                {analytics?.todayInvoicesCount || 3} {t.dashboard.todayOrders}
               </span>
-              <span className="text-zinc-400 text-[11px]">settled today</span>
             </div>
           </div>
         </div>
@@ -220,22 +217,22 @@ export default function DashboardPage() {
       {/* Main Charts & Stock Health Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 2 Cols: Valuation & Cost Historical Area Chart */}
-        <div className="lg:col-span-2 p-6 rounded-2xl bg-white dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 shadow-sm">
+        <div className="lg:col-span-2 p-6 rounded-2xl bg-white dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 shadow-xs">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-base font-bold text-zinc-900 dark:text-white">
-                Stock Valuation vs. Cost Trajectory
+                {t.dashboard.monthlyPerformance}
               </h2>
               <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                Continuous historical growth and unrealized margins
+                {t.dashboard.revenueVsCost}
               </p>
             </div>
             <div className="flex items-center gap-4 text-xs">
               <span className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-300">
-                <span className="w-3 h-3 rounded-full bg-indigo-500" /> Retail Valuation ($)
+                <span className="w-3 h-3 rounded-full bg-indigo-500" /> {t.dashboard.valuationTrend}
               </span>
               <span className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-300">
-                <span className="w-3 h-3 rounded-full bg-purple-500" /> Cost Basis ($)
+                <span className="w-3 h-3 rounded-full bg-purple-500" /> {t.dashboard.costTrend}
               </span>
             </div>
           </div>
@@ -255,7 +252,7 @@ export default function DashboardPage() {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
                 <XAxis dataKey="month" stroke="#71717a" fontSize={11} />
-                <YAxis stroke="#71717a" fontSize={11} tickFormatter={(val) => `$${val / 1000}k`} />
+                <YAxis stroke="#71717a" fontSize={11} tickFormatter={(val) => `${val / 1000}k`} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: '#18181b',
@@ -287,35 +284,35 @@ export default function DashboardPage() {
         </div>
 
         {/* Right 1 Col: Low Stock Alert Center */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col justify-between">
+        <div className="p-6 rounded-2xl bg-white dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-amber-500" />
                 <h2 className="text-base font-bold text-zinc-900 dark:text-white">
-                  Stock Alert Center
+                  {t.dashboard.lowStockAlerts}
                 </h2>
               </div>
               <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                {lowStockProducts.length} Needs Attention
+                {lowStockProducts.length}
               </span>
             </div>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-4">
-              Items under threshold or out of stock requiring supplier reorders.
+              {t.inventory.subtitle}
             </p>
 
-            <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
+            <div className="space-y-3 max-h-64 overflow-y-auto pe-1">
               {lowStockProducts.map((p) => (
                 <div
                   key={p.id}
                   className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/60 flex items-center justify-between"
                 >
-                  <div className="min-w-0 pr-2">
+                  <div className="min-w-0 pe-2">
                     <p className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate">
                       {p.name}
                     </p>
                     <span className="text-[10px] font-mono text-zinc-500">
-                      SKU: {p.sku} | Min: {p.minStockThreshold}
+                      {t.inventory.sku}: {p.sku} | {t.inventory.minThreshold}: {p.minStockThreshold}
                     </span>
                   </div>
                   <StockBadge quantity={p.quantitySellable} minThreshold={p.minStockThreshold} />
@@ -324,7 +321,7 @@ export default function DashboardPage() {
 
               {lowStockProducts.length === 0 && (
                 <div className="text-center py-8 text-xs text-zinc-500">
-                  🎉 All products are adequately stocked above threshold!
+                  🎉 {t.dashboard.allStocked}
                 </div>
               )}
             </div>
@@ -334,7 +331,7 @@ export default function DashboardPage() {
             href="/inventory"
             className="mt-4 w-full py-2.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-xl text-xs font-semibold text-center text-zinc-800 dark:text-zinc-200 transition block"
           >
-            View Full Inventory Catalog &rarr;
+            {t.dashboard.viewAll} &rarr;
           </Link>
         </div>
       </div>
@@ -342,16 +339,16 @@ export default function DashboardPage() {
       {/* Bottom Grid: Recent Factures & Live Audit Trail */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Invoices */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 shadow-sm">
+        <div className="p-6 rounded-2xl bg-white dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 shadow-xs">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-base font-bold text-zinc-900 dark:text-white">
-              Recent Factures (Invoices)
+              {t.dashboard.recentInvoices}
             </h2>
             <Link
               href="/factures"
               className="text-xs font-semibold text-indigo-500 hover:underline"
             >
-              View all
+              {t.dashboard.viewAll}
             </Link>
           </div>
 
@@ -366,15 +363,15 @@ export default function DashboardPage() {
                     {f.invoiceNumber}
                   </span>
                   <p className="text-xs text-zinc-700 dark:text-zinc-300 font-medium">
-                    {f.client?.name || 'Walk-in Client'}
+                    {f.client?.name || t.pos.walkInCustomer}
                   </p>
                   <span className="text-[10px] text-zinc-400">
-                    {new Date(f.createdAt).toLocaleDateString()} • {f.items.length} items
+                    {new Date(f.createdAt).toLocaleDateString()} • {f.items.length} {t.common.items}
                   </span>
                 </div>
-                <div className="text-right">
+                <div className="text-end">
                   <p className="font-mono text-sm font-black text-zinc-900 dark:text-white">
-                    ${f.totalAmount.toFixed(2)}
+                    {formatCurrency(f.totalAmount)}
                   </p>
                   <span
                     className={`inline-block text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
@@ -385,28 +382,32 @@ export default function DashboardPage() {
                         : 'bg-amber-500/10 text-amber-500'
                     }`}
                   >
-                    {f.status}
+                    {t.factures[f.status as keyof typeof t.factures] || f.status}
                   </span>
                 </div>
               </div>
             ))}
+
+            {recentFactures.length === 0 && (
+              <p className="text-xs text-zinc-500 py-6 text-center">{t.dashboard.noInvoices}</p>
+            )}
           </div>
         </div>
 
         {/* Live Immutable Audit Logs */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 shadow-sm">
+        <div className="p-6 rounded-2xl bg-white dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 shadow-xs">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-5 h-5 text-indigo-500" />
               <h2 className="text-base font-bold text-zinc-900 dark:text-white">
-                Live Audit Activity
+                {t.dashboard.recentActivity}
               </h2>
             </div>
             <Link
               href="/audit"
               className="text-xs font-semibold text-indigo-500 hover:underline"
             >
-              Full Trail
+              {t.dashboard.viewAll}
             </Link>
           </div>
 
@@ -422,11 +423,11 @@ export default function DashboardPage() {
                       {a.action}
                     </span>
                     <span className="font-mono text-zinc-400 text-[11px]">
-                      Target: {a.entityId || a.entityType}
+                      {a.entityId || a.entityType}
                     </span>
                   </div>
                   <p className="text-[11px] text-zinc-500 mt-1">
-                    By: <strong className="text-zinc-300">{a.user?.fullName || 'System'}</strong> ({a.user?.role || 'Daemon'}) • IP: {a.ipAddress}
+                    {t.audit.user}: <strong className="text-zinc-300">{a.user?.fullName || 'System'}</strong> • IP: {a.ipAddress}
                   </p>
                 </div>
                 <span className="text-[10px] text-zinc-500 font-mono">
@@ -434,6 +435,10 @@ export default function DashboardPage() {
                 </span>
               </div>
             ))}
+
+            {recentAudits.length === 0 && (
+              <p className="text-xs text-zinc-500 py-6 text-center">{t.dashboard.noActivity}</p>
+            )}
           </div>
         </div>
       </div>

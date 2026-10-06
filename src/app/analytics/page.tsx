@@ -2,16 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  TrendingUp,
   DollarSign,
   Boxes,
   Calendar,
-  Layers,
   ArrowUpRight,
-  Sparkles,
-  Camera,
   CheckCircle2,
-  BarChart3,
   Clock,
 } from 'lucide-react';
 import {
@@ -22,12 +17,12 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  AreaChart,
-  Area,
 } from 'recharts';
 import { AnalyticsSummary, DailyStockSnapshot } from '@/types';
+import { useI18nStore } from '@/store/i18nStore';
 
 export default function AnalyticsPage() {
+  const { t, formatCurrency } = useI18nStore();
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
   const [snapshots, setSnapshots] = useState<DailyStockSnapshot[]>([]);
   const [isTriggeringSnapshot, setIsTriggeringSnapshot] = useState(false);
@@ -60,7 +55,7 @@ export default function AnalyticsPage() {
       const res = await fetch('/api/snapshots', { method: 'POST' });
       const data = await res.json();
       if (data.success) {
-        setSnapshotSuccessMsg(`✓ Snapshot for ${data.snapshot.snapshotDate} generated & committed!`);
+        setSnapshotSuccessMsg(`✓ Snapshot (${data.snapshot.snapshotDate}) OK!`);
         fetchAnalytics();
         setTimeout(() => setSnapshotSuccessMsg(null), 4000);
       }
@@ -79,10 +74,10 @@ export default function AnalyticsPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
-            Valuation Overview & YoY Growth Engine
+            {t.analytics.title}
           </h1>
           <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            Real-time balance sheet metrics, Category valuation breakdown, and automated daily midnight stock snapshots.
+            {t.analytics.subtitle}
           </p>
         </div>
 
@@ -96,7 +91,7 @@ export default function AnalyticsPage() {
           ) : (
             <>
               <Clock className="w-4 h-4" />
-              Trigger Midnight Snapshot (00:00)
+              {t.analytics.snapshots} (00:00)
             </>
           )}
         </button>
@@ -113,44 +108,44 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Card 1: Total Retail Valuation */}
         <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 shadow-xs">
-          <span className="text-xs font-semibold text-zinc-500">Total Retail Inventory Valuation</span>
+          <span className="text-xs font-semibold text-zinc-500">{t.analytics.retailValuation}</span>
           <div className="mt-2 flex items-center justify-between">
             <h3 className="text-2xl font-black font-mono text-zinc-900 dark:text-white">
-              ${analytics?.totalRetailValuation.toLocaleString() || '124,350.00'}
+              {formatCurrency(analytics?.totalRetailValuation || 124350)}
             </h3>
             <div className="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
               <DollarSign className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-[11px] text-zinc-400 mt-1 font-mono">∑ Quantity × Selling Price</p>
+          <p className="text-[11px] text-zinc-400 mt-1 font-mono">∑ {t.pos.qty} × {t.inventory.sellingPrice}</p>
         </div>
 
         {/* Card 2: Total Inventory Cost */}
         <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 shadow-xs">
-          <span className="text-xs font-semibold text-zinc-500">Total Inventory Cost Basis</span>
+          <span className="text-xs font-semibold text-zinc-500">{t.analytics.costValuation}</span>
           <div className="mt-2 flex items-center justify-between">
             <h3 className="text-2xl font-black font-mono text-zinc-900 dark:text-white">
-              ${analytics?.totalInventoryCost.toLocaleString() || '92,840.00'}
+              {formatCurrency(analytics?.totalInventoryCost || 92840)}
             </h3>
             <div className="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center">
               <Boxes className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-[11px] text-zinc-400 mt-1 font-mono">∑ Quantity × Unit Cost</p>
+          <p className="text-[11px] text-zinc-400 mt-1 font-mono">∑ {t.pos.qty} × {t.inventory.unitCost}</p>
         </div>
 
         {/* Card 3: Unrealized Profit Margins */}
         <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 shadow-xs">
-          <span className="text-xs font-semibold text-zinc-500">Unrealized Gross Margin</span>
+          <span className="text-xs font-semibold text-zinc-500">{t.analytics.profitMargin}</span>
           <div className="mt-2 flex items-center justify-between">
             <h3 className="text-2xl font-black font-mono text-emerald-600 dark:text-emerald-400">
-              ${analytics?.unrealizedProfit.toLocaleString() || '31,510.00'}
+              {formatCurrency(analytics?.unrealizedProfit || 31510)}
             </h3>
             <span className="px-2 py-1 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-bold text-xs">
               {analytics?.unrealizedProfitMargin || 25.3}%
             </span>
           </div>
-          <p className="text-[11px] text-zinc-400 mt-1 font-mono">Retail Valuation - Cost Basis</p>
+          <p className="text-[11px] text-zinc-400 mt-1 font-mono">{t.analytics.unrealizedProfit}</p>
         </div>
       </div>
 
@@ -158,46 +153,46 @@ export default function AnalyticsPage() {
       <div className="p-6 rounded-2xl bg-linear-to-r from-indigo-950/30 via-zinc-900 to-zinc-900 border border-indigo-500/20 shadow-xl">
         <div className="flex items-center gap-2 mb-4">
           <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
-            YoY ENGINE
+            YoY
           </span>
-          <h2 className="text-base font-bold text-white">Year-over-Year (YoY) Growth Metrics</h2>
+          <h2 className="text-base font-bold text-white">{t.analytics.yoyComparison}</h2>
         </div>
         <p className="text-xs text-zinc-400 mb-6">
-          Comparison between current inventory performance and the exact same calendar date last year.
+          {t.analytics.subtitle}
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           <div className="p-4 rounded-xl bg-zinc-900/80 border border-zinc-800">
-            <span className="text-xs text-zinc-400 block mb-1">Total Valuation Growth</span>
+            <span className="text-xs text-zinc-400 block mb-1">{t.analytics.yearOverYear}</span>
             <div className="flex items-center gap-2">
               <span className="text-2xl font-black text-emerald-400 flex items-center">
                 <ArrowUpRight className="w-5 h-5" />
                 +{analytics?.yoyValuationGrowth || 24.5}%
               </span>
             </div>
-            <p className="text-[10px] text-zinc-500 mt-1">vs. $64,200.00 valuation 1 year ago</p>
+            <p className="text-[10px] text-zinc-500 mt-1">{t.dashboard.valuationTrend}</p>
           </div>
 
           <div className="p-4 rounded-xl bg-zinc-900/80 border border-zinc-800">
-            <span className="text-xs text-zinc-400 block mb-1">Total Inventory Volume (Units)</span>
+            <span className="text-xs text-zinc-400 block mb-1">{t.analytics.totalSellable}</span>
             <div className="flex items-center gap-2">
               <span className="text-2xl font-black text-emerald-400 flex items-center">
                 <ArrowUpRight className="w-5 h-5" />
                 +{analytics?.yoyStockGrowth || 18.2}%
               </span>
             </div>
-            <p className="text-[10px] text-zinc-500 mt-1">vs. 85 units baseline 1 year ago</p>
+            <p className="text-[10px] text-zinc-500 mt-1">{t.inventory.qtyAvailable}</p>
           </div>
 
           <div className="p-4 rounded-xl bg-zinc-900/80 border border-zinc-800">
-            <span className="text-xs text-zinc-400 block mb-1">POS Sales Velocity</span>
+            <span className="text-xs text-zinc-400 block mb-1">{t.analytics.revenue}</span>
             <div className="flex items-center gap-2">
               <span className="text-2xl font-black text-indigo-400 flex items-center">
                 <ArrowUpRight className="w-5 h-5" />
                 +{analytics?.yoySalesGrowth || 32.4}%
               </span>
             </div>
-            <p className="text-[10px] text-zinc-500 mt-1">Faster turnover & customer conversion</p>
+            <p className="text-[10px] text-zinc-500 mt-1">{t.dashboard.todaySales}</p>
           </div>
         </div>
       </div>
@@ -207,18 +202,18 @@ export default function AnalyticsPage() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-base font-bold text-zinc-900 dark:text-white">
-              Inventory Valuation by Category
+              {t.analytics.categoryBreakdown}
             </h2>
             <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              Comparative distribution of cost vs. potential retail valuation
+              {t.dashboard.revenueVsCost}
             </p>
           </div>
           <div className="flex items-center gap-4 text-xs">
             <span className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-300">
-              <span className="w-3 h-3 rounded-full bg-indigo-500" /> Retail Valuation ($)
+              <span className="w-3 h-3 rounded-full bg-indigo-500" /> {t.dashboard.valuationTrend}
             </span>
             <span className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-300">
-              <span className="w-3 h-3 rounded-full bg-purple-500" /> Cost Basis ($)
+              <span className="w-3 h-3 rounded-full bg-purple-500" /> {t.dashboard.costTrend}
             </span>
           </div>
         </div>
@@ -228,7 +223,7 @@ export default function AnalyticsPage() {
             <BarChart data={categoryChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
               <XAxis dataKey="name" stroke="#71717a" fontSize={11} />
-              <YAxis stroke="#71717a" fontSize={11} tickFormatter={(v) => `$${v / 1000}k`} />
+              <YAxis stroke="#71717a" fontSize={11} tickFormatter={(v) => `${v / 1000}k`} />
               <Tooltip
                 contentStyle={{
                   backgroundColor: '#18181b',
@@ -251,22 +246,21 @@ export default function AnalyticsPage() {
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4 text-indigo-500" />
             <h3 className="text-sm font-bold text-zinc-900 dark:text-white">
-              Automated Daily Stock Snapshots (`daily_stock_snapshots`)
+              {t.analytics.snapshots}
             </h3>
           </div>
-          <span className="text-xs text-zinc-500 font-mono">00:00 Daily Cron Record</span>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+          <table className="w-full text-start text-xs">
             <thead>
               <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/50 text-zinc-500 dark:text-zinc-400 uppercase text-[10px] font-bold tracking-wider">
-                <th className="py-3 px-4">Snapshot Date</th>
-                <th className="py-3 px-4 text-center">Items Count</th>
-                <th className="py-3 px-4 text-center">Total Stock Qty</th>
-                <th className="py-3 px-4 text-right">Cost Valuation ($)</th>
-                <th className="py-3 px-4 text-right">Retail Valuation ($)</th>
-                <th className="py-3 px-4 text-right">Captured At</th>
+                <th className="py-3 px-4">{t.factures.date}</th>
+                <th className="py-3 px-4 text-center">{t.inventory.totalProducts}</th>
+                <th className="py-3 px-4 text-center">{t.inventory.qtyAvailable}</th>
+                <th className="py-3 px-4 text-end">{t.analytics.costValuation}</th>
+                <th className="py-3 px-4 text-end">{t.analytics.retailValuation}</th>
+                <th className="py-3 px-4 text-end">{t.audit.timestamp}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800/60">
@@ -284,13 +278,13 @@ export default function AnalyticsPage() {
                   <td className="py-3 px-4 text-center font-mono font-bold text-zinc-900 dark:text-white">
                     {snap.totalStockQty}
                   </td>
-                  <td className="py-3 px-4 text-right font-mono text-zinc-500">
-                    ${snap.totalCostValuation.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  <td className="py-3 px-4 text-end font-mono text-zinc-500">
+                    {formatCurrency(snap.totalCostValuation)}
                   </td>
-                  <td className="py-3 px-4 text-right font-mono font-bold text-zinc-900 dark:text-white">
-                    ${snap.totalRetailValuation.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  <td className="py-3 px-4 text-end font-mono font-bold text-zinc-900 dark:text-white">
+                    {formatCurrency(snap.totalRetailValuation)}
                   </td>
-                  <td className="py-3 px-4 text-right font-mono text-zinc-400 text-[11px]">
+                  <td className="py-3 px-4 text-end font-mono text-zinc-400 text-[11px]">
                     {new Date(snap.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </td>
                 </tr>
