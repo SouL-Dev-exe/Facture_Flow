@@ -1,0 +1,186 @@
+// Prisma Schema for FactureFlow
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String             @id @default(uuid())
+  fullName     String             @map("full_name")
+  email        String             @unique
+  passwordHash String             @map("password_hash")
+  pinCode      String?            @map("pin_code")
+  role         String             @default("cashier") // 'admin', 'manager', 'cashier'
+  createdAt    DateTime           @default(now()) @map("created_at")
+  
+  factures     Facture[]
+  creditNotes  CreditNote[]
+  damagedLogs  DamagedStockLog[]
+  auditLogs    AuditLog[]
+
+  @@map("users")
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String?
+  products    Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id                 String             @id @default(uuid())
+  sku                String             @unique
+  barcode            String?            @unique
+  name               String
+  categoryId         String?            @map("category_id")
+  category           Category?          @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  unitCost           Float              @default(0.00) @map("unit_cost")
+  sellingPrice       Float              @default(0.00) @map("selling_price")
+  quantitySellable   Int                @default(0) @map("quantity_sellable")
+  quantityDamaged    Int                @default(0) @map("quantity_damaged")
+  minStockThreshold  Int                @default(5) @map("min_stock_threshold")
+  taxRate            Float              @default(0.00) @map("tax_rate")
+  imageUrl           String?            @map("image_url")
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+
+  factureItems       FactureItem[]
+  creditNoteItems    CreditNoteItem[]
+  damagedLogs        DamagedStockLog[]
+
+  @@map("products")
+}
+
+model Client {
+  id          String       @id @default(uuid())
+  name        String
+  phone       String?
+  email       String?
+  address     String?
+  taxNumber   String?      @map("tax_number")
+  balance     Float        @default(0.00)
+  createdAt   DateTime     @default(now()) @map("created_at")
+
+  factures    Facture[]
+  creditNotes CreditNote[]
+
+  @@map("clients")
+}
+
+model Facture {
+  id             String         @id @default(uuid())
+  invoiceNumber  String         @unique @map("invoice_number")
+  clientId       String?        @map("client_id")
+  client         Client?        @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  userId         String?        @map("user_id")
+  user           User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  subtotal       Float          @default(0.00)
+  discountAmount Float          @default(0.00) @map("discount_amount")
+  taxAmount      Float          @default(0.00) @map("tax_amount")
+  totalAmount    Float          @default(0.00) @map("total_amount")
+  status         String         @default("paid") // 'draft', 'unpaid', 'partially_paid', 'paid', 'returned'
+  paymentMethod  String         @default("cash") @map("payment_method")
+  notes          String?
+  createdAt      DateTime       @default(now()) @map("created_at")
+
+  items          FactureItem[]
+  creditNotes    CreditNote[]
+
+  @@map("factures")
+}
+
+model FactureItem {
+  id         String   @id @default(uuid())
+  factureId  String   @map("facture_id")
+  facture    Facture  @relation(fields: [factureId], references: [id], onDelete: Cascade)
+  productId  String   @map("product_id")
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  quantity   Int
+  unitCost   Float    @map("unit_cost")
+  unitPrice  Float    @map("unit_price")
+  discount   Float    @default(0.00)
+  totalPrice Float    @map("total_price")
+
+  @@map("facture_items")
+}
+
+model CreditNote {
+  id                String           @id @default(uuid())
+  creditNoteNumber  String           @unique @map("credit_note_number")
+  factureId         String           @map("facture_id")
+  facture           Facture          @relation(fields: [factureId], references: [id], onDelete: Restrict)
+  clientId          String?          @map("client_id")
+  client            Client?          @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  approvedByUserId  String?          @map("approved_by_user_id")
+  approvedBy        User?            @relation(fields: [approvedByUserId], references: [id], onDelete: SetNull)
+  totalRefundAmount Float            @map("total_refund_amount")
+  reason            String?
+  createdAt         DateTime         @default(now()) @map("created_at")
+
+  items             CreditNoteItem[]
+
+  @@map("credit_notes")
+}
+
+model CreditNoteItem {
+  id                 String     @id @default(uuid())
+  creditNoteId       String     @map("credit_note_id")
+  creditNote         CreditNote @relation(fields: [creditNoteId], references: [id], onDelete: Cascade)
+  productId          String     @map("product_id")
+  product            Product    @relation(fields: [productId], references: [id], onDelete: Restrict)
+  quantityReturned   Int        @map("quantity_returned")
+  unitRefundPrice    Float      @map("unit_refund_price")
+  restockDestination String     @default("sellable") @map("restock_destination") // 'sellable' OR 'damaged'
+  totalRefund        Float      @map("total_refund")
+
+  @@map("credit_note_items")
+}
+
+model DamagedStockLog {
+  id                 String   @id @default(uuid())
+  productId          String   @map("product_id")
+  product            Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId             String?  @map("user_id")
+  user               User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  quantityWrittenOff Int      @map("quantity_written_off")
+  costLossValue      Float    @map("cost_loss_value")
+  reason             String
+  notes              String?
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  @@map("damaged_stock_logs")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?  @map("user_id")
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action     String
+  entityType String   @map("entity_type")
+  entityId   String?  @map("entity_id")
+  oldValues  String?  @map("old_values") // JSON string
+  newValues  String?  @map("new_values") // JSON string
+  ipAddress  String?  @map("ip_address")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("audit_logs")
+}
+
+model DailyStockSnapshot {
+  id                   String   @id @default(uuid())
+  snapshotDate         DateTime @unique @map("snapshot_date")
+  totalItemsCount      Int      @map("total_items_count")
+  totalStockQty        Int      @map("total_stock_qty")
+  totalCostValuation   Float    @map("total_cost_valuation")
+  totalRetailValuation Float    @map("total_retail_valuation")
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  @@map("daily_stock_snapshots")
+}
