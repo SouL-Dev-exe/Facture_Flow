@@ -3,7 +3,7 @@ import { User, Category, Product, Client, Facture, CreditNote, DamagedStockLog, 
 export const initialUsers: (User & { password?: string })[] = [
   {
     id: 'user-admin-1',
-    fullName: 'Sarah Connor',
+    fullName: 'SouL',
     email: 'admin@factureflow.com',
     role: 'admin',
     pinCode: '1111',
@@ -12,7 +12,7 @@ export const initialUsers: (User & { password?: string })[] = [
   },
   {
     id: 'user-manager-1',
-    fullName: 'Alex Vance',
+    fullName: 'SouL1',
     email: 'manager@factureflow.com',
     role: 'manager',
     pinCode: '2222',
@@ -21,7 +21,7 @@ export const initialUsers: (User & { password?: string })[] = [
   },
   {
     id: 'user-cashier-1',
-    fullName: 'John Doe',
+    fullName: 'SouL2',
     email: 'cashier@factureflow.com',
     role: 'cashier',
     pinCode: '3333',
