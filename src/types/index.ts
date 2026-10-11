@@ -256,3 +256,47 @@ export interface AnalyticsSummary {
   categoryValuation: { name: string; cost: number; retail: number; count: number }[];
   recentDailySnapshots: DailyStockSnapshot[];
 }
+
+// ====== SUPPLIER & PURCHASE ORDERS ======
+export type PaymentTerms = 'net_30' | 'net_60' | 'net_90' | 'immediate';
+
+export interface Supplier {
+  id: string;
+  name: string;
+  contactPerson?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  address?: string | null;
+  nif?: string | null;
+  nis?: string | null;
+  paymentTerms: PaymentTerms;
+  notes?: string | null;
+  createdAt: string;
+  _count?: { purchaseOrders: number };
+}
+
+export type PurchaseOrderStatus = 'draft' | 'received';
+
+export interface PurchaseOrderItem {
+  id: string;
+  purchaseOrderId: string;
+  productId: string;
+  product?: Product;
+  quantity: number;
+  unitCost: number;
+  totalCost: number;
+}
+
+export interface PurchaseOrder {
+  id: string;
+  poNumber: string;
+  supplierId: string;
+  supplier?: Supplier;
+  invoiceReference?: string | null;
+  totalAmount: number;
+  status: PurchaseOrderStatus;
+  notes?: string | null;
+  createdAt: string;
+  receivedAt?: string | null;
+  items: PurchaseOrderItem[];
+}

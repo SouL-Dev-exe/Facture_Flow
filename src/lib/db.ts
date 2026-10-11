@@ -12,6 +12,9 @@ import {
   AnalyticsSummary,
   AnalyticsTimeframe,
   UserRole,
+  Supplier,
+  PurchaseOrder,
+  PurchaseOrderItem,
 } from '@/types';
 import {
   initialUsers,
@@ -37,6 +40,8 @@ class FactureFlowDatabase {
   public damagedLogs: DamagedStockLog[] = [...initialDamagedLogs];
   public auditLogs: AuditLog[] = [...initialAuditLogs];
   public dailySnapshots: DailyStockSnapshot[] = [...initialDailySnapshots];
+  public suppliers: Supplier[] = [];
+  public purchaseOrders: PurchaseOrder[] = [];
   private isSyncing = false;
   private hasSynced = false;
 
@@ -61,6 +66,9 @@ class FactureFlowDatabase {
         damagedLogsRes,
         auditLogsRes,
         snapshotsRes,
+        suppliersRes,
+        purchaseOrdersRes,
+        purchaseOrderItemsRes,
       ] = await Promise.all([
         supabase.from('users').select('*'),
         supabase.from('categories').select('*'),
@@ -73,6 +81,9 @@ class FactureFlowDatabase {
         supabase.from('damaged_stock_logs').select('*'),
         supabase.from('audit_logs').select('*'),
         supabase.from('daily_stock_snapshots').select('*'),
+        supabase.from('suppliers').select('*'),
+        supabase.from('purchase_orders').select('*'),
+        supabase.from('purchase_order_items').select('*'),
       ]);
 
       if (usersRes.data && usersRes.data.length > 0) {
@@ -231,6 +242,49 @@ class FactureFlowDatabase {
           totalCostValuation: Number(s.total_cost_valuation) || 0,
           totalRetailValuation: Number(s.total_retail_valuation) || 0,
           createdAt: s.created_at,
+        }));
+      }
+
+      if (suppliersRes.data && suppliersRes.data.length > 0) {
+        this.suppliers = suppliersRes.data.map((s: any) => ({
+          id: s.id,
+          name: s.name,
+          contactPerson: s.contact_person,
+          phone: s.phone,
+          email: s.email,
+          address: s.address,
+          nif: s.nif,
+          nis: s.nis,
+          paymentTerms: s.payment_terms || 'net_30',
+          notes: s.notes,
+          createdAt: s.created_at,
+        }));
+      }
+
+      if (purchaseOrdersRes.data && purchaseOrdersRes.data.length > 0) {
+        const poItems = purchaseOrderItemsRes.data || [];
+        this.purchaseOrders = purchaseOrdersRes.data.map((po: any) => ({
+          id: po.id,
+          poNumber: po.po_number,
+          supplierId: po.supplier_id,
+          supplier: this.suppliers.find((s) => s.id === po.supplier_id),
+          invoiceReference: po.invoice_reference,
+          totalAmount: Number(po.total_amount) || 0,
+          status: po.status,
+          notes: po.notes,
+          createdAt: po.created_at,
+          receivedAt: po.received_at,
+          items: poItems
+            .filter((item: any) => item.purchase_order_id === po.id)
+            .map((item: any) => ({
+              id: item.id,
+              purchaseOrderId: item.purchase_order_id,
+              productId: item.product_id,
+              product: this.products.find((p) => p.id === item.product_id),
+              quantity: Number(item.quantity) || 0,
+              unitCost: Number(item.unit_cost) || 0,
+              totalCost: Number(item.total_cost) || 0,
+            })),
         }));
       }
 
@@ -1309,6 +1363,241 @@ class FactureFlowDatabase {
 
     return snapshot;
   }
+
+  // ================= SUPPLIERS =================
+  public getSuppliers(): Supplier[] {
+    return [...this.suppliers].sort((a, b) => a.name.localeCompare(b.name)).map((s) => ({
+      ...s,
+      _count: { purchaseOrders: this.purchaseOrders.filter((po) => po.supplierId === s.id).length },
+    }));
+  }
+
+  public getSupplierById(id: string): Supplier | undefined {
+    const s = this.suppliers.find((s) => s.id === id);
+    if (!s) return undefined;
+    return { ...s, _count: { purchaseOrders: this.purchaseOrders.filter((po) => po.supplierId === s.id).length } };
+  }
+
+  public createSupplier(data: Omit<Supplier, 'id' | 'createdAt' | '_count'>): Supplier {
+    const id = `sup-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+    const supplier: Supplier = { ...data, id, createdAt: new Date().toISOString() };
+    this.suppliers.push(supplier);
+
+    supabase.from('suppliers').insert([{
+      id,
+      name: supplier.name,
+      contact_person: supplier.contactPerson,
+      phone: supplier.phone,
+      email: supplier.email,
+      address: supplier.address,
+      nif: supplier.nif,
+      nis: supplier.nis,
+      payment_terms: supplier.paymentTerms,
+      notes: supplier.notes,
+    }]).then();
+
+    return supplier;
+  }
+
+  public updateSupplier(id: string, data: Partial<Omit<Supplier, 'id' | 'createdAt' | '_count'>>): Supplier | null {
+    const idx = this.suppliers.findIndex((s) => s.id === id);
+    if (idx === -1) return null;
+    const updated: Supplier = { ...this.suppliers[idx], ...data };
+    this.suppliers[idx] = updated;
+
+    supabase.from('suppliers').update({
+      name: updated.name,
+      contact_person: updated.contactPerson,
+      phone: updated.phone,
+      email: updated.email,
+      address: updated.address,
+      nif: updated.nif,
+      nis: updated.nis,
+      payment_terms: updated.paymentTerms,
+      notes: updated.notes,
+    }).eq('id', id).then();
+
+    return updated;
+  }
+
+  public deleteSupplier(id: string): boolean {
+    const idx = this.suppliers.findIndex((s) => s.id === id);
+    if (idx === -1) return false;
+    this.suppliers.splice(idx, 1);
+    supabase.from('suppliers').delete().eq('id', id).then();
+    return true;
+  }
+
+  // ================= PURCHASE ORDERS =================
+  public getPurchaseOrders(): PurchaseOrder[] {
+    return [...this.purchaseOrders]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .map((po) => ({
+        ...po,
+        supplier: this.suppliers.find((s) => s.id === po.supplierId),
+        items: po.items.map((item) => ({
+          ...item,
+          product: this.products.find((p) => p.id === item.productId),
+        })),
+      }));
+  }
+
+  public getPurchaseOrderById(id: string): PurchaseOrder | undefined {
+    const po = this.purchaseOrders.find((p) => p.id === id);
+    if (!po) return undefined;
+    return {
+      ...po,
+      supplier: this.suppliers.find((s) => s.id === po.supplierId),
+      items: po.items.map((item) => ({
+        ...item,
+        product: this.products.find((p) => p.id === item.productId),
+      })),
+    };
+  }
+
+  private generatePoNumber(): string {
+    const count = this.purchaseOrders.length + 1;
+    return `PO-${new Date().getFullYear()}-${String(count).padStart(4, '0')}`;
+  }
+
+  public createPurchaseOrder(data: {
+    supplierId: string;
+    invoiceReference?: string;
+    notes?: string;
+    items: { productId: string; quantity: number; unitCost: number }[];
+  }, userId?: string): PurchaseOrder {
+    const id = `po-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+    const poNumber = this.generatePoNumber();
+
+    const poItems: PurchaseOrderItem[] = data.items.map((item, idx) => ({
+      id: `poi-${Date.now()}-${idx}-${Math.random().toString(36).substr(2, 4)}`,
+      purchaseOrderId: id,
+      productId: item.productId,
+      quantity: item.quantity,
+      unitCost: item.unitCost,
+      totalCost: item.quantity * item.unitCost,
+    }));
+
+    const totalAmount = poItems.reduce((sum, item) => sum + item.totalCost, 0);
+
+    const po: PurchaseOrder = {
+      id,
+      poNumber,
+      supplierId: data.supplierId,
+      invoiceReference: data.invoiceReference || null,
+      totalAmount,
+      status: 'draft',
+      notes: data.notes || null,
+      createdAt: new Date().toISOString(),
+      receivedAt: null,
+      items: poItems,
+    };
+
+    this.purchaseOrders.unshift(po);
+
+    // Persist to Supabase
+    supabase.from('purchase_orders').insert([{
+      id,
+      po_number: poNumber,
+      supplier_id: data.supplierId,
+      invoice_reference: data.invoiceReference || null,
+      total_amount: totalAmount,
+      status: 'draft',
+      notes: data.notes || null,
+    }]).then();
+
+    supabase.from('purchase_order_items').insert(
+      poItems.map((item) => ({
+        id: item.id,
+        purchase_order_id: id,
+        product_id: item.productId,
+        quantity: item.quantity,
+        unit_cost: item.unitCost,
+        total_cost: item.totalCost,
+      }))
+    ).then();
+
+    this.logAudit({
+      userId,
+      action: 'CREATE_PURCHASE_ORDER',
+      entityType: 'purchase_order',
+      entityId: id,
+      newValues: { poNumber, supplierId: data.supplierId, totalAmount, itemsCount: poItems.length },
+    });
+
+    return po;
+  }
+
+  public receivePurchaseOrder(poId: string, userId?: string): PurchaseOrder | null {
+    const poIdx = this.purchaseOrders.findIndex((p) => p.id === poId);
+    if (poIdx === -1) return null;
+
+    const po = this.purchaseOrders[poIdx];
+    if (po.status === 'received') return po;
+
+    // Update stock quantities and unit costs for each item
+    for (const item of po.items) {
+      const productIdx = this.products.findIndex((p) => p.id === item.productId);
+      if (productIdx !== -1) {
+        const product = this.products[productIdx];
+        const oldQty = product.quantitySellable;
+        const newQty = oldQty + item.quantity;
+
+        // Weighted average cost recalculation
+        const currentTotalCost = product.unitCost * oldQty;
+        const incomingCost = item.unitCost * item.quantity;
+        const newUnitCost = newQty > 0 ? (currentTotalCost + incomingCost) / newQty : item.unitCost;
+
+        this.products[productIdx] = {
+          ...product,
+          quantitySellable: newQty,
+          unitCost: Math.round(newUnitCost * 100) / 100,
+          updatedAt: new Date().toISOString(),
+        };
+
+        supabase.from('products').update({
+          quantity_sellable: newQty,
+          unit_cost: Math.round(newUnitCost * 100) / 100,
+          updated_at: new Date().toISOString(),
+        }).eq('id', item.productId).then();
+
+        this.logAudit({
+          userId,
+          action: 'RECEIVE_STOCK_FROM_PO',
+          entityType: 'product',
+          entityId: item.productId,
+          oldValues: { quantitySellable: oldQty, unitCost: product.unitCost },
+          newValues: { quantitySellable: newQty, unitCost: Math.round(newUnitCost * 100) / 100, poNumber: po.poNumber },
+        });
+      }
+    }
+
+    const receivedAt = new Date().toISOString();
+    this.purchaseOrders[poIdx] = { ...po, status: 'received', receivedAt };
+
+    supabase.from('purchase_orders').update({ status: 'received', received_at: receivedAt }).eq('id', poId).then();
+
+    this.logAudit({
+      userId,
+      action: 'RECEIVE_PURCHASE_ORDER',
+      entityType: 'purchase_order',
+      entityId: poId,
+      oldValues: { status: 'draft' },
+      newValues: { status: 'received', receivedAt },
+    });
+
+    return this.purchaseOrders[poIdx];
+  }
+
+  public deletePurchaseOrder(id: string): boolean {
+    const idx = this.purchaseOrders.findIndex((p) => p.id === id);
+    if (idx === -1) return false;
+    const po = this.purchaseOrders[idx];
+    if (po.status === 'received') return false; // Cannot delete received POs
+    this.purchaseOrders.splice(idx, 1);
+    supabase.from('purchase_orders').delete().eq('id', id).then();
+    return true;
+  }
 }
 
 // Global Singleton for Next.js hot reload safety
@@ -1318,3 +1607,4 @@ declare global {
 }
 
 export const db = global.__factureFlowDb || (global.__factureFlowDb = new FactureFlowDatabase());
+

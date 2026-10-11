@@ -8,6 +8,8 @@
     "damaged": "Stock Défectueux",
     "analytics": "Valorisation & YoY",
     "audit": "Journal d'Audit",
+    "suppliers": "Répertoire Fournisseurs",
+    "purchaseOrders": "Bons de Commande",
     "coreModules": "Modules Principaux"
   },
   "header": {
@@ -363,5 +365,48 @@
     "en": "English",
     "fr": "Français",
     "ar": "العربية"
+  },
+  "suppliers": {
+    "title": "Répertoire Fournisseurs",
+    "subtitle": "Gérez les profils fournisseurs et les relations d'achat.",
+    "newSupplier": "Nouveau Fournisseur",
+    "editSupplier": "Modifier le Fournisseur",
+    "deleteSupplier": "Supprimer le Fournisseur",
+    "companyName": "Nom de l'Entreprise",
+    "contactPerson": "Personne de Contact",
+    "phone": "Téléphone",
+    "email": "E-mail",
+    "address": "Adresse",
+    "nif": "NIF (Identifiant Fiscal)",
+    "nis": "NIS (Identifiant Statistique)",
+    "paymentTerms": "Conditions de Paiement",
+    "notes": "Notes",
+    "noSuppliers": "Aucun fournisseur trouvé",
+    "totalSuppliers": "Total Fournisseurs",
+    "activeVendors": "Fournisseurs Actifs",
+    "viewOrders": "Voir les Bons de Commande"
+  },
+  "purchaseOrders": {
+    "title": "Bons de Commande",
+    "subtitle": "Factures d'achat — stock entrant des fournisseurs.",
+    "newPo": "Nouveau Bon de Commande",
+    "poNumber": "Numéro BC",
+    "supplier": "Fournisseur",
+    "invoiceRef": "Réf. Facture Fournisseur",
+    "date": "Date",
+    "status": "Statut",
+    "total": "Total",
+    "draft": "Brouillon",
+    "received": "Réceptionné",
+    "receive": "Réceptionner le Stock",
+    "receiveConfirm": "La réception de ce BC ajoutera les produits à l'inventaire et recalculera les coûts unitaires moyens pondérés.",
+    "lineItems": "Lignes de Commande",
+    "product": "Produit",
+    "qty": "Qté",
+    "unitCost": "Coût Unitaire",
+    "lineTotal": "Total Ligne",
+    "orderTotal": "Total Commande",
+    "noPOs": "Aucun bon de commande trouvé",
+    "pendingValue": "Valeur en Attente"
   }
 }

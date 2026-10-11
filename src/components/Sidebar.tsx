@@ -13,6 +13,8 @@ import {
   TrendingUp,
   History,
   ShieldCheck,
+  Building2,
+  ClipboardList,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useI18nStore } from '@/store/i18nStore';
@@ -29,6 +31,8 @@ export const Sidebar: React.FC = () => {
     { labelKey: 'factures' as const, href: '/factures', icon: FileSpreadsheet, badge: null, roles: ['admin', 'manager', 'cashier'] },
     { labelKey: 'creditNotes' as const, href: '/credit-notes', icon: RotateCcw, badge: null, roles: ['admin', 'manager'] },
     { labelKey: 'damaged' as const, href: '/damaged', icon: AlertTriangle, badge: null, roles: ['admin', 'manager', 'stocker'] },
+    { labelKey: 'suppliers' as const, href: '/suppliers', icon: Building2, badge: null, roles: ['admin', 'manager'] },
+    { labelKey: 'purchaseOrders' as const, href: '/purchase-orders', icon: ClipboardList, badge: 'PO', roles: ['admin', 'manager'] },
     { labelKey: 'analytics' as const, href: '/analytics', icon: TrendingUp, badge: 'YoY', roles: ['admin', 'manager'] },
     { labelKey: 'audit' as const, href: '/audit', icon: History, badge: 'Logs', roles: ['admin', 'manager'] },
   ];

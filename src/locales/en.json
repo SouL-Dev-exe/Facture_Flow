@@ -8,6 +8,8 @@
     "damaged": "Damaged Stock",
     "analytics": "Valuation & YoY",
     "audit": "Audit Trail",
+    "suppliers": "Supplier Directory",
+    "purchaseOrders": "Purchase Orders",
     "coreModules": "Core Modules"
   },
   "header": {
@@ -363,5 +365,48 @@
     "en": "English",
     "fr": "Français",
     "ar": "العربية"
+  },
+  "suppliers": {
+    "title": "Supplier Directory",
+    "subtitle": "Manage vendor profiles and purchase relationships.",
+    "newSupplier": "New Supplier",
+    "editSupplier": "Edit Supplier",
+    "deleteSupplier": "Delete Supplier",
+    "companyName": "Company Name",
+    "contactPerson": "Contact Person",
+    "phone": "Phone",
+    "email": "Email",
+    "address": "Address",
+    "nif": "NIF (Tax ID)",
+    "nis": "NIS (Statistical ID)",
+    "paymentTerms": "Payment Terms",
+    "notes": "Notes",
+    "noSuppliers": "No suppliers found",
+    "totalSuppliers": "Total Suppliers",
+    "activeVendors": "Active Vendors",
+    "viewOrders": "View Purchase Orders"
+  },
+  "purchaseOrders": {
+    "title": "Purchase Orders",
+    "subtitle": "Factures d'achat — incoming stock from suppliers.",
+    "newPo": "New Purchase Order",
+    "poNumber": "PO Number",
+    "supplier": "Supplier",
+    "invoiceRef": "Supplier Invoice Ref.",
+    "date": "Date",
+    "status": "Status",
+    "total": "Total",
+    "draft": "Draft",
+    "received": "Received",
+    "receive": "Receive Stock",
+    "receiveConfirm": "Receiving this PO will add products to inventory and recalculate weighted-average unit costs.",
+    "lineItems": "Line Items",
+    "product": "Product",
+    "qty": "Qty",
+    "unitCost": "Unit Cost",
+    "lineTotal": "Line Total",
+    "orderTotal": "Order Total",
+    "noPOs": "No purchase orders found",
+    "pendingValue": "Pending Value"
   }
 }
