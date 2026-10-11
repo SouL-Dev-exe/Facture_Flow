@@ -48,6 +48,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (actorUserId) {
+      const actor = db.users.find((u) => u.id === actorUserId);
+      if (actor && actor.role === 'cashier') {
+        return NextResponse.json(
+          { success: false, message: 'Forbidden: Cashiers cannot create products' },
+          { status: 403 }
+        );
+      }
+    }
+
     const product = db.createProduct(
       {
         sku,
@@ -78,6 +88,16 @@ export async function PATCH(req: NextRequest) {
 
     if (!id) {
       return NextResponse.json({ success: false, message: 'Product ID required' }, { status: 400 });
+    }
+
+    if (actorUserId) {
+      const actor = db.users.find((u) => u.id === actorUserId);
+      if (actor && actor.role === 'cashier') {
+        return NextResponse.json(
+          { success: false, message: 'Forbidden: Cashier cannot modify stock or products' },
+          { status: 403 }
+        );
+      }
     }
 
     const current = db.getProductById(id);

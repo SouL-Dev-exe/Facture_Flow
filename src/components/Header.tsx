@@ -38,12 +38,14 @@ export const Header: React.FC<HeaderProps> = ({
     admin: 'bg-purple-500/10 text-purple-400 border-purple-500/30',
     manager: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30',
     cashier: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30',
+    stocker: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
   };
 
   const roleLabels: Record<UserRole, string> = {
     admin: t.roles.admin,
     manager: t.roles.manager,
     cashier: t.roles.cashier,
+    stocker: t.roles.stocker,
   };
 
   const handleRoleClick = (role: UserRole) => {
@@ -97,7 +99,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Role Switcher Bar */}
           <div className="flex items-center bg-zinc-100 dark:bg-zinc-900 p-1 rounded-xl border border-zinc-200 dark:border-zinc-800 shadow-inner">
-            {(['admin', 'manager', 'cashier'] as UserRole[]).map((role) => {
+            {(['admin', 'manager', 'cashier', 'stocker'] as UserRole[]).map((role) => {
               const isActive = currentUser.role === role;
               return (
                 <button

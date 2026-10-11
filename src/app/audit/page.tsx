@@ -9,9 +9,12 @@ import {
 } from 'lucide-react';
 import { AuditLog } from '@/types';
 import { useI18nStore } from '@/store/i18nStore';
+import { useAuthStore } from '@/store/authStore';
+import Link from 'next/link';
 
 export default function AuditPage() {
   const { t } = useI18nStore();
+  const { currentUser } = useAuthStore();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAction, setSelectedAction] = useState('all');
@@ -19,7 +22,9 @@ export default function AuditPage() {
 
   const fetchLogs = async () => {
     try {
-      const res = await fetch('/api/audit-logs');
+      const res = await fetch(`/api/audit-logs?userId=${currentUser.id}`, {
+        headers: { 'x-user-id': currentUser.id },
+      });
       const data = await res.json();
       if (data.success) {
         setLogs(data.logs);
@@ -30,8 +35,32 @@ export default function AuditPage() {
   };
 
   useEffect(() => {
-    fetchLogs();
-  }, []);
+    if (currentUser.role === 'admin' || currentUser.role === 'manager') {
+      fetchLogs();
+    }
+  }, [currentUser]);
+
+  if (currentUser.role === 'cashier' || currentUser.role === 'stocker') {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6">
+        <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center mb-4">
+          <ShieldCheck className="w-8 h-8" />
+        </div>
+        <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">
+          Audit Trail Restricted
+        </h2>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-md mb-6">
+          System audit logs are strictly reserved for Store Managers and Administrators.
+        </p>
+        <Link
+          href={currentUser.role === 'cashier' ? '/pos' : '/inventory'}
+          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-md shadow-indigo-600/30 transition"
+        >
+          Return to {currentUser.role === 'cashier' ? 'POS' : 'Inventory'}
+        </Link>
+      </div>
+    );
+  }
 
   const actionTypes = Array.from(new Set(logs.map((l) => l.action)));
 

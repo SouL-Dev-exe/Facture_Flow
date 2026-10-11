@@ -21,9 +21,11 @@
     "admin": "Administrateur",
     "manager": "Gérant",
     "cashier": "Caissier",
+    "stocker": "Magasinier",
     "adminFull": "Administrateur Système",
     "managerFull": "Gérant de Magasin",
-    "cashierFull": "Personnel de Caisse"
+    "cashierFull": "Personnel de Caisse",
+    "stockerFull": "Agent d'Entrepôt / Stock"
   },
   "auth": {
     "securityVerification": "Vérification de Sécurité",
@@ -42,7 +44,8 @@
     "incorrectFor": "Mot de passe ou code PIN incorrect pour",
     "adminDesc": "Accès complet en écriture, modification des valorisations financières et gestion des instantanés.",
     "managerDesc": "Ajustement des niveaux de stock, approbation des avoirs/retours et autorisation des remises exceptionnelles.",
-    "cashierDesc": "Opérations de caisse POS, scan de codes-barres et impression des factures de vente."
+    "cashierDesc": "Opérations de caisse POS, scan de codes-barres et impression des factures de vente.",
+    "stockerDesc": "Gestion des stocks en entrepôt, réapprovisionnement et gestion des catégories."
   },
   "dashboard": {
     "title": "Tableau de Bord",
@@ -50,6 +53,13 @@
     "subtitle": "Vue d'ensemble en direct des stocks et du point de vente",
     "welcome": "Bienvenue",
     "overviewDesc": "Voici les performances en temps réel de vos stocks, ventes et marges aujourd'hui.",
+    "daily": "Vue Journalière",
+    "monthly": "Vue Mensuelle",
+    "yearly": "Vue Annuelle",
+    "timeframeDaily": "Jour",
+    "timeframeMonthly": "Mois",
+    "timeframeYearly": "Année",
+    "grossRevenue": "Chiffre d'Affaires Brut",
     "totalRevenue": "Chiffre d'Affaires Total",
     "totalCost": "Coût d'Achat Global",
     "grossProfit": "Marge Brute",
@@ -74,7 +84,30 @@
     "addStock": "Ajouter un Article",
     "viewFactures": "Consulter les Factures",
     "noInvoices": "Aucune facture enregistrée pour le moment",
-    "noActivity": "Aucun enregistrement d'audit disponible"
+    "noActivity": "Aucun enregistrement d'audit disponible",
+    "inventoryValuation": "Valorisation des Stocks & Capitaux",
+    "capitalTiedUp": "Capital Immobilisé en Stock",
+    "potentialValuation": "Valorisation Vente Potentielle",
+    "unrealizedProfit": "Bénéfice Net Latent",
+    "hourlyVelocity": "Vélocité des Ventes par Heure (Pic d'Affluence)",
+    "hourlySubtitle": "Identification des heures de pointe pour optimiser les plannings",
+    "tvaCollected": "TVA 19% Collectée",
+    "discountsApplied": "Remises Totales Accordées",
+    "avgBasket": "Panier Moyen",
+    "transactions": "Transactions Totales",
+    "netMargin": "Taux de Marge Nette",
+    "momGrowth": "Croissance Mensuelle (MoM)",
+    "yoyComparison": "Comparatif Annuel (YoY)",
+    "paymentBreakdown": "Répartition des Moyens de Paiement",
+    "topProducts": "Classement des Meilleurs Produits",
+    "topCategories": "Classement des Catégories",
+    "employeePerformance": "Performance des Vendeurs / Caissiers",
+    "restrictedRole": "Accès Réservé Direction & Gérance",
+    "damagedGoodsAlert": "Pertes Marchandises Avariées",
+    "cash": "Espèces",
+    "card": "Carte Bancaire",
+    "transfer": "Virement Bancaire",
+    "cheque": "Chèque"
   },
   "inventory": {
     "title": "Inventaire & Gestion des Stocks",
@@ -323,7 +356,8 @@
     "rbacGuard": "Sécurité RBAC",
     "adminAccess": "Accès total et modifications financières.",
     "managerAccess": "Gestion des stocks, avoirs et remises.",
-    "cashierAccess": "Encaissement point de vente et facturation uniquement."
+    "cashierAccess": "Encaissement point de vente et facturation uniquement.",
+    "stockerAccess": "Gestion des stocks d'entrepôt uniquement."
   },
   "lang": {
     "en": "English",

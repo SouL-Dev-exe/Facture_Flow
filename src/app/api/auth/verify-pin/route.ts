@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const verification = db.verifyPin(inputCredential, allowedRoles || ['admin', 'manager', 'cashier']);
+    const verification = db.verifyPin(inputCredential, allowedRoles || ['admin', 'manager', 'cashier', 'stocker']);
     if (!verification.success) {
       return NextResponse.json({ success: false, message: verification.message }, { status: 403 });
     }

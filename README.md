@@ -7,15 +7,15 @@
 [![Next.js](https://img.shields.io/badge/Next.js-14.2-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
-[![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?style=for-the-badge&logo=prisma)](https://www.prisma.io/)
+[![Supabase](https://img.shields.io/badge/Supabase-Database-3ECF8E?style=for-the-badge&logo=supabase)](https://supabase.com/)
 [![Zustand](https://img.shields.io/badge/Zustand-State-orange?style=for-the-badge)](https://github.com/pmndrs/zustand)
 [![License](https://img.shields.io/badge/License-MIT-emerald?style=for-the-badge)](LICENSE)
 
 <p align="center">
-  A modern, high-performance SaaS platform inspired by Linear, Stripe, and Vercel for real-time inventory tracking, barcode point-of-sale (POS), official A4 invoicing, 80mm thermal receipt printing, credit notes (<i>Avoir</i>), and year-over-year (YoY) financial analytics.
+  A modern, high-performance SaaS platform inspired by Linear, Stripe, and Vercel for real-time inventory tracking, custom quantity stock adjustments, dynamic invoice editing, 19% TVA toggle controls, barcode point-of-sale (POS), official A4 invoicing, thermal receipts, role-based access control (RBAC), and enterprise financial intelligence.
 </p>
 
-[Key Features](#-key-features) • [Tech Stack](#-tech-stack) • [Quick Start](#-quick-start) • [RBAC & Demo Credentials](#-rbac--demo-credentials) • [Database Schema](#-database-schema) • [API Reference](#-api-reference)
+[Key Features](#-key-features) • [Tech Stack](#-tech-stack) • [Quick Start](#-quick-start) • [RBAC & Demo Credentials](#-rbac--demo-credentials) • [Enterprise Dashboard](#-enterprise-dashboard--financial-analytics) • [Database Schema](#-database-schema) • [API Reference](#-api-reference)
 
 </div>
 
@@ -27,29 +27,41 @@
 * **Split-View Interface:** Category tabs, live product search, and responsive catalog grid on the left; real-time reactive order cart on the right.
 * **Barcode Scanner Support:** Camera stream barcode scanner, USB hardware scanner listener, and simulation presets.
 * **Stock Safety Guard:** Real-time inventory validation preventing cart quantities from exceeding sellable stock (`quantity_sellable`).
-* **Tax & Discount Engine:** Line-item and global cart discounts with automated 20% TVA calculations.
+* **Fixed 19% TVA with Customer Toggle Switch:** Dynamic toggle to include or exempt invoices from 19% TVA with automated real-time recalculation of subtotals and totals.
+* **Full Past Invoice Editing:** Search catalog items, adjust line quantities, remove items, and edit previous factures with automatic stock delta reconciliation.
 * **Dual Output Engine:** One-click clean **A4 Printable Invoices** (official B2B with tax ID/ICE) and **80mm Thermal Receipts** (retail counters) via `@media print`.
 
 ### 📦 2. Product & Inventory Management
 * **Smart Stock Badges:** Dynamic visual indicators (🟢 In Stock, 🟠 Low Stock, 🔴 Out of Stock).
-* **Inline Quick Adjusters:** Quick `+1`, `+5`, `-1`, `-5` stock modifier buttons bound to automatic audit logging.
+* **Custom Number Input Stock Adjuster:** Replaces fixed quick modifiers with a sleek number input supporting free additions/subtractions, live stock preview, Enter-to-apply, and actor audit logging.
+* **Dynamic Category Selector:** Live creation of categories on the fly with the `+ Add New Category...` modal and instant dropdown sync.
 * **Client-Side WebP Image Compressor:** HTML5 `<canvas>` compressor reducing product images below $< 200\text{ KB}$ with live compression statistics.
 * **Stock Alert Center:** Compiles items requiring immediate supplier reorders.
 
-### 🔄 3. Returns, Credit Notes (*Avoir*) & Damaged Goods
+### 📊 3. Enterprise Dashboard & Financial Intelligence
+* **Timeframe View Selector (Daily | Monthly | Yearly):**
+  * **Daily View:** Today’s gross revenue, completed orders count, average basket size, payment method breakdown (Cash, Card, Transfer, Cheque), and an **Hourly Sales Velocity Chart** displaying peak store traffic hours for staff scheduling.
+  * **Monthly View:** Monthly turnover, total 19% TVA collected for tax reporting, total discounts applied, net profit margin, and **Month-over-Month (MoM) growth indicator** (+% vs last month).
+  * **Yearly View:** Annual turnover, cumulative inventory cost vs. retail valuation, and historical Year-over-Year (YoY) charts from snapshots.
+* **Inventory Valuation & Unrealized Profit Widget:** Displays total capital tied up in stock ($\sum \text{Qty} \times \text{Cost}$) vs. potential retail valuation ($\sum \text{Qty} \times \text{Price}$), highlighting unrealized profit margins.
+* **Leaderboards:**
+  * **Top-Selling Products Leaderboard:** Ranked by unit sales and net profit contributions.
+  * **Top Categories Leaderboard:** Sales volume and revenue by category.
+  * **Cashier & Staff Sales Leaderboard:** Performance tracking (orders processed, total revenue, average basket) strictly restricted to Managers and Admins.
+* **Damaged Goods Loss Tracking:** Financial loss tracking of written-off damaged inventory.
+
+### 🔄 4. Returns, Credit Notes (*Avoir*) & Damaged Goods
 * **Credit Notes (*Avoir*):** Process returns tied directly to original invoice IDs (`AVR-2024-XXXX`).
 * **Smart Stock Routing:** Route returned goods to **Sellable Stock** (`quantity_sellable + N`) or **Damaged Pool** (`quantity_damaged + N`).
-* **Damaged Goods Write-Off Engine:** Deduct broken or expired inventory and compute net financial losses ($\text{Quantity} \times \text{Unit Cost}$) isolated from standard sales P&L.
-
-### 📈 4. Financial Valuation & YoY Historical Snapshots
-* **Valuation Overview:** Real-time metrics for Total Inventory Cost ($\sum \text{Qty} \times \text{Cost}$), Total Retail Valuation ($\sum \text{Qty} \times \text{Price}$), and Unrealized Margin %.
-* **Automated Midnight Snapshots:** Captures end-of-day stock counts and valuations into `daily_stock_snapshots`.
-* **YoY Growth Engine:** Compare stock levels, sales velocity, and total valuation against the exact same calendar date last year.
+* **Damaged Goods Write-Off Engine:** Deduct broken or expired inventory and compute net financial losses isolated from standard sales P&L.
 
 ### 🛡️ 5. Role-Based Access Control (RBAC) & Audit Trail
-* **Granular Security Tiers:** Admin, Manager, and Cashier roles with dynamic privilege switches.
-* **Manager Price Override System:** Sleek 4-digit PIN authorization modal when cashiers attempt custom discounts or price overrides.
-* **Immutable Audit Trail:** Real-time tracking of `PRICE_OVERRIDE`, `APPROVE_RETURN`, `EDIT_PRODUCT_COST`, `WRITE_OFF_DAMAGED`, `CREATE_FACTURE`, capturing actor ID, timestamp, IP address, and JSON diffs of `old_values` vs `new_values`.
+* **4 Distinct Role Tiers:**
+  * **Admin:** Full unrestricted access to all modules, financial metrics, settings, user management, and system overrides.
+  * **Manager:** Identical administrative capabilities for stock, sales, reports, and overrides.
+  * **Cashier:** Sales and POS worker. Can create and process invoices; blocked from modifying stock quantities, viewing the Financial Dashboard, and accessing audit logs.
+  * **Stocker (Warehouse Worker):** Can add/subtract stock, manage inventory quantities, and manage categories; blocked from POS sales, invoice creation, Financial Dashboard, and audit logs.
+* **Immutable Audit Trail:** Real-time tracking of `CUSTOM_STOCK_ADJUST`, `PRICE_OVERRIDE`, `APPROVE_RETURN`, `EDIT_PRODUCT_COST`, `WRITE_OFF_DAMAGED`, `CREATE_FACTURE`, capturing actor ID, timestamp, IP address, and JSON diffs of `old_values` vs `new_values`.
 
 ---
 
@@ -58,14 +70,16 @@
 | Domain | Technology |
 |---|---|
 | **Framework** | [Next.js 14 (App Router)](https://nextjs.org/) |
-| **Language** | [TypeScript](https://www.typescriptlang.org/) |
+| **Language** | [TypeScript](https://www.typescriptlang.org/) (Strict mode) |
 | **Styling** | [Tailwind CSS](https://tailwindcss.com/) with Dark/Light mode |
+| **Animations** | [Framer Motion](https://www.framer.com/motion/) |
 | **Icons & UI** | [Lucide React](https://lucide.dev/), [Canvas Confetti](https://www.npmjs.com/package/canvas-confetti) |
 | **State Management** | [Zustand](https://github.com/pmndrs/zustand) |
 | **Charts & Analytics** | [Recharts](https://recharts.org/) |
-| **Database & ORM** | [Prisma ORM](https://www.prisma.io/) (PostgreSQL & SQLite compatible) |
+| **Database** | [Supabase](https://supabase.com/) (PostgreSQL) with live synchronization |
 | **Image Processing** | HTML5 `<canvas>` WebP client-side compressor |
 | **Document Output** | Custom CSS `@media print` engine for A4 & 80mm thermal printers |
+| **Internationalization** | Trilingual engine (English, French, Arabic with RTL support) |
 
 ---
 
@@ -88,11 +102,7 @@ npm install
 # 3. Setup environment variables
 cp .env.example .env
 
-# 4. Generate Prisma Client & Initialize Database
-npx prisma generate
-npx prisma db push
-
-# 5. Start the development server
+# 4. Start the development server
 npm run dev
 ```
 
@@ -102,19 +112,20 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## 🛡️ RBAC & Demo Credentials
 
-Use the top-right role switcher or test the PIN authorization modals using the pre-configured credentials:
+Switch roles directly via the top header switcher bar or test security verification modals:
 
-| Role | Permissions | Demo PIN | Default User |
-|---|---|---|---|
-| **Admin** | Full system write access, financial valuation, manual snapshot trigger, overrides | `1234` | Sarah Connor |
-| **Manager** | Quick stock modification (+1/+5/-1/-5), return/credit note approvals, damaged write-offs, cashier price overrides | `9999` | Alex Vance |
-| **Cashier** | Strictly restricted to POS billing and barcode checkout. Price changes and returns trigger Manager PIN modal | `0000` | John Doe |
+| Role | Primary Responsibility | Default User | Email | Password | PIN Code |
+|---|---|---|---|---|---|
+| **Admin** | System Overrides & Full Administration | SouL | `admin@factureflow.com` | `admin123` | `1111` |
+| **Manager** | Store Management & Overrides | SouL1 | `manager@factureflow.com` | `manager123` | `2222` |
+| **Cashier** | POS Sales & Customer Checkout | SouL2 | `cashier@factureflow.com` | `cashier123` | `3333` |
+| **Stocker** | Warehouse & Inventory Stocking | SouL3 | `stocker@factureflow.com` | `stocker123` | `4444` |
 
 ---
 
 ## 🗄️ Database Schema
 
-The application implements an enterprise relational schema:
+The application connects to Supabase PostgreSQL with real-time sync:
 
 ```mermaid
 erDiagram
@@ -137,17 +148,18 @@ erDiagram
 
 ## 📡 API Reference
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` / `POST` | `/api/products` | List products or create a new catalog item |
-| `PATCH` | `/api/products` | Quick stock adjuster (+1, +5, -1, -5) or price/cost edit with audit log |
-| `GET` / `POST` | `/api/factures` | List invoices or checkout a POS order with stock deduction |
-| `GET` / `POST` | `/api/credit-notes` | List or issue an official Credit Note (*Avoir*) with stock routing |
-| `GET` / `POST` | `/api/damaged-stock` | Retrieve write-off logs or scrap damaged inventory |
-| `GET` | `/api/analytics` | Financial valuation, revenue metrics, and YoY summary |
-| `GET` / `POST` | `/api/snapshots` | List daily snapshots or trigger midnight valuation snapshot |
-| `GET` | `/api/audit-logs` | Query immutable audit logs with before/after JSON snapshots |
-| `POST` | `/api/auth/verify-pin` | Verify Manager / Admin PIN code for privileged actions |
+| Method | Endpoint | Description | Allowed Roles |
+|---|---|---|---|
+| `GET` / `POST` | `/api/products` | Catalog items and stock registration | `admin`, `manager`, `stocker` (POST blocked for `cashier`) |
+| `PATCH` | `/api/products` | Custom quantity stock update or price edits | `admin`, `manager`, `stocker` (Blocked for `cashier`) |
+| `GET` / `POST` | `/api/categories` | Fetch and create dynamic categories | `admin`, `manager`, `stocker` |
+| `GET` / `POST` | `/api/factures` | List factures or execute checkout | `admin`, `manager`, `cashier` (POST blocked for `stocker`) |
+| `PUT` | `/api/factures/[id]` | Full invoice item edit & 19% TVA recalculation | `admin`, `manager`, `cashier` (Blocked for `stocker`) |
+| `GET` / `POST` | `/api/credit-notes` | Issue an official Credit Note (*Avoir*) | `admin`, `manager` |
+| `GET` / `POST` | `/api/damaged-stock` | Retrieve write-off logs or scrap damaged stock | `admin`, `manager`, `stocker` |
+| `GET` | `/api/analytics` | Timeframe analytics (`daily`, `monthly`, `yearly`) | `admin`, `manager` |
+| `GET` | `/api/audit-logs` | Immutable audit trail with before/after snapshots | `admin`, `manager` |
+| `POST` | `/api/auth/verify-pin` | Verify Role credentials and 4-digit PIN codes | All roles |
 
 ---
 
@@ -155,17 +167,7 @@ erDiagram
 
 * `Cmd+K` / `Ctrl+K` — Open global Command Palette to jump to any page or search products.
 * `Esc` — Close active modals and dialogs.
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps:
-1. Fork the repository.
-2. Create your feature branch (`git checkout -b feature/amazing-feature`).
-3. Commit your changes (`git commit -m 'Add some amazing feature'`).
-4. Push to the branch (`git push origin feature/amazing-feature`).
-5. Open a Pull Request.
+* `Enter` — Apply stock quantity adjustment in Quick Stock Adjuster.
 
 ---
 

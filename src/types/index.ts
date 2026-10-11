@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'manager' | 'cashier';
+export type UserRole = 'admin' | 'manager' | 'cashier' | 'stocker';
 
 export interface User {
   id: string;
@@ -74,6 +74,7 @@ export interface Facture {
   discountAmount: number;
   taxAmount: number;
   totalAmount: number;
+  hasTva: boolean;
   status: FactureStatus;
   paymentMethod: PaymentMethod;
   notes?: string | null;
@@ -155,7 +156,58 @@ export interface CartItem {
   isPriceOverridden?: boolean;
 }
 
+export type AnalyticsTimeframe = 'daily' | 'monthly' | 'yearly';
+
+export interface TopProductMetric {
+  id: string;
+  name: string;
+  sku: string;
+  categoryName: string;
+  unitsSold: number;
+  totalRevenue: number;
+  profit: number;
+}
+
+export interface TopCategoryMetric {
+  id: string;
+  name: string;
+  unitsSold: number;
+  totalRevenue: number;
+}
+
+export interface EmployeePerformanceMetric {
+  userId: string;
+  fullName: string;
+  email: string;
+  role: UserRole;
+  facturesCount: number;
+  totalRevenue: number;
+  averageBasket: number;
+}
+
+export interface HourlySalesMetric {
+  hour: string; // e.g., '09:00', '10:00'
+  revenue: number;
+  ordersCount: number;
+}
+
+export interface MonthlyTrendMetric {
+  month: string; // e.g., 'May', 'Jun'
+  revenue: number;
+  cost: number;
+  netProfit: number;
+  tvaCollected: number;
+}
+
+export interface PaymentBreakdown {
+  cash: number;
+  card: number;
+  bankTransfer: number;
+  cheque: number;
+}
+
 export interface AnalyticsSummary {
+  // Global valuation & warehouse
   totalInventoryCost: number;
   totalRetailValuation: number;
   unrealizedProfit: number;
@@ -163,8 +215,39 @@ export interface AnalyticsSummary {
   totalProductsCount: number;
   totalStockQuantity: number;
   totalDamagedQuantity: number;
+  damagedGoodsCostLoss: number;
   lowStockItemsCount: number;
   outOfStockCount: number;
+
+  // Timeframe-specific metrics (computed based on selected timeframe)
+  timeframe: AnalyticsTimeframe;
+  revenue: number;
+  transactionsCount: number;
+  averageBasketSize: number;
+  tvaCollected: number;
+  discountsApplied: number;
+  costOfGoodsSold: number;
+  netProfit: number;
+  netProfitMargin: number;
+  momGrowthPercentage: number;
+  paymentBreakdown: PaymentBreakdown;
+
+  // Velocity & charts
+  hourlySalesVelocity: HourlySalesMetric[];
+  monthlyTrends: MonthlyTrendMetric[];
+  yearlyComparison: {
+    year: string;
+    turnover: number;
+    costValuation: number;
+    retailValuation: number;
+  }[];
+
+  // Leaderboards
+  topProducts: TopProductMetric[];
+  topCategories: TopCategoryMetric[];
+  employeePerformance: EmployeePerformanceMetric[];
+
+  // Legacy compatibility
   todaySalesTotal: number;
   todayInvoicesCount: number;
   yoyValuationGrowth: number;

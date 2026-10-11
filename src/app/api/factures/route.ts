@@ -32,9 +32,20 @@ export async function POST(req: NextRequest) {
       discountAmount,
       taxAmount,
       totalAmount,
+      hasTva = true,
       paymentMethod = 'cash',
       notes,
     } = body;
+
+    if (userId) {
+      const actor = db.users.find((u) => u.id === userId);
+      if (actor && actor.role === 'stocker') {
+        return NextResponse.json(
+          { success: false, message: 'Forbidden: Stockers cannot create factures or execute sales' },
+          { status: 403 }
+        );
+      }
+    }
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ success: false, message: 'Invoice must contain at least 1 item' }, { status: 400 });
@@ -65,6 +76,7 @@ export async function POST(req: NextRequest) {
       discountAmount: Number(discountAmount) || 0,
       taxAmount: Number(taxAmount) || 0,
       totalAmount: Number(totalAmount) || 0,
+      hasTva: !!hasTva,
       paymentMethod,
       notes,
     });

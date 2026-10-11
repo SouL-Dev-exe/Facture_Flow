@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Boxes,
   Plus,
   Search,
   AlertTriangle,
   X,
+  Tag,
+  Loader2,
 } from 'lucide-react';
 import { Product, Category } from '@/types';
 import { StockBadge } from '@/components/StockBadge';
@@ -16,13 +18,200 @@ import { ManagerPinModal } from '@/components/ManagerPinModal';
 import { useAuthStore } from '@/store/authStore';
 import { useI18nStore } from '@/store/i18nStore';
 
+// ─────────────────────────────────────────────────────────────
+// Add-New-Category Modal
+// ─────────────────────────────────────────────────────────────
+interface AddCategoryModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onCreated: (category: Category) => void;
+}
+
+function AddCategoryModal({ isOpen, onClose, onCreated }: AddCategoryModalProps) {
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setName('');
+      setDescription('');
+      setError(null);
+      setTimeout(() => inputRef.current?.focus(), 80);
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) {
+      setError('Category name cannot be empty.');
+      return;
+    }
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name.trim(), description: description.trim() || undefined }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        onCreated(data.category);
+        onClose();
+      } else if (res.status === 409) {
+        // Already exists — just select it
+        onCreated(data.category);
+        onClose();
+      } else {
+        setError(data.message || 'Failed to create category.');
+      }
+    } catch {
+      setError('Network error. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="w-full max-w-sm bg-zinc-900 border border-zinc-700 rounded-2xl shadow-2xl p-6 text-zinc-100">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-indigo-600/20 rounded-lg">
+              <Tag className="w-4 h-4 text-indigo-400" />
+            </div>
+            <h3 className="text-sm font-bold text-white">New Category</h3>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-zinc-500 hover:text-white transition"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {error && (
+          <div className="mb-4 px-3 py-2 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div>
+            <label className="block text-[11px] font-semibold text-zinc-400 mb-1">
+              Category Name <span className="text-rose-400">*</span>
+            </label>
+            <input
+              ref={inputRef}
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Laptops, Accessories..."
+              className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-indigo-500 transition"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-semibold text-zinc-400 mb-1">
+              Description <span className="text-zinc-600">(optional)</span>
+            </label>
+            <input
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Short description..."
+              className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-indigo-500 transition"
+            />
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-2 rounded-xl border border-zinc-700 text-zinc-300 hover:bg-zinc-800 text-xs font-semibold transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white rounded-xl text-xs font-semibold shadow-lg shadow-indigo-600/20 transition flex items-center justify-center gap-1.5"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-3 h-3 animate-spin" /> Creating...
+                </>
+              ) : (
+                'Create Category'
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Reusable Category Select — includes "+ Add New Category..."
+// ─────────────────────────────────────────────────────────────
+interface CategorySelectProps {
+  value: string;
+  categories: Category[];
+  onChange: (value: string) => void;
+  onRequestAddNew: () => void;
+  placeholder?: string;
+  className?: string;
+}
+
+function CategorySelect({
+  value,
+  categories,
+  onChange,
+  onRequestAddNew,
+  placeholder = 'All Categories',
+  className = '',
+}: CategorySelectProps) {
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (e.target.value === '__add_new__') {
+      e.target.value = value; // reset visual selection
+      onRequestAddNew();
+    } else {
+      onChange(e.target.value);
+    }
+  };
+
+  return (
+    <select value={value} onChange={handleChange} className={className}>
+      <option value="">{placeholder}</option>
+      {categories.map((c) => (
+        <option key={c.id} value={c.id}>
+          {c.name}
+        </option>
+      ))}
+      <option disabled>─────────────</option>
+      <option value="__add_new__">＋ Add New Category...</option>
+    </select>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Main Page
+// ─────────────────────────────────────────────────────────────
 export default function InventoryPage() {
   const { currentUser } = useAuthStore();
   const { t, formatCurrency } = useI18nStore();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [isCategoriesLoading, setIsCategoriesLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('');
   const [stockFilter, setStockFilter] = useState<'all' | 'low' | 'out'>('all');
 
   // Modals
@@ -33,6 +222,10 @@ export default function InventoryPage() {
   const [writeOffReason, setWriteOffReason] = useState('Damaged during storage/handling');
   const [writeOffNotes, setWriteOffNotes] = useState('');
   const [isPinModalOpen, setIsPinModalOpen] = useState(false);
+
+  // New category modal state + which dropdown triggered it
+  const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
+  const [addCategoryTarget, setAddCategoryTarget] = useState<'filter' | 'form'>('filter');
 
   // New product form state
   const [newProduct, setNewProduct] = useState({
@@ -51,31 +244,56 @@ export default function InventoryPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // ── Fetch categories independently from Supabase via API ──
+  const fetchCategories = async () => {
+    try {
+      setIsCategoriesLoading(true);
+      const res = await fetch('/api/categories');
+      const data = await res.json();
+      if (data.success) setCategories(data.categories);
+    } catch (err) {
+      console.error('Failed to load categories', err);
+    } finally {
+      setIsCategoriesLoading(false);
+    }
+  };
+
   const fetchProducts = async () => {
     try {
       const res = await fetch('/api/products');
       const data = await res.json();
-      if (data.success) {
-        setProducts(data.products);
-        const cats: Category[] = [];
-        data.products.forEach((p: Product) => {
-          if (p.category && !cats.find((c) => c.id === p.category?.id)) {
-            cats.push(p.category);
-          }
-        });
-        setCategories(cats);
-      }
+      if (data.success) setProducts(data.products);
     } catch (err) {
       console.error('Failed to load inventory', err);
     }
   };
 
   useEffect(() => {
+    fetchCategories();
     fetchProducts();
   }, []);
 
+  // ── Category created callback — add to state & auto-select ──
+  const handleCategoryCreated = (category: Category) => {
+    setCategories((prev) => {
+      if (prev.find((c) => c.id === category.id)) return prev;
+      return [...prev, category].sort((a, b) => a.name.localeCompare(b.name));
+    });
+
+    if (addCategoryTarget === 'filter') {
+      setSelectedCategory(category.id);
+    } else {
+      setNewProduct((prev) => ({ ...prev, categoryId: category.id }));
+    }
+  };
+
+  const openAddCategory = (target: 'filter' | 'form') => {
+    setAddCategoryTarget(target);
+    setIsAddCategoryOpen(true);
+  };
+
   const filteredProducts = products.filter((p) => {
-    const matchesCat = selectedCategory === 'all' || p.categoryId === selectedCategory;
+    const matchesCat = !selectedCategory || p.categoryId === selectedCategory;
     const matchesSearch =
       searchQuery === '' ||
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -208,19 +426,20 @@ export default function InventoryPage() {
           />
         </div>
 
-        {/* Category Select */}
-        <select
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          className="w-full md:w-48 py-2 px-3 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/60 rounded-xl text-xs text-zinc-700 dark:text-zinc-200 focus:outline-none"
-        >
-          <option value="all">{t.inventory.allCategories}</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+        {/* Category Filter Select — with "+ Add New Category..." */}
+        <div className="relative w-full md:w-48">
+          {isCategoriesLoading && (
+            <Loader2 className="w-3 h-3 animate-spin text-zinc-400 absolute end-3 top-2.5 pointer-events-none" />
+          )}
+          <CategorySelect
+            value={selectedCategory}
+            categories={categories}
+            onChange={setSelectedCategory}
+            onRequestAddNew={() => openAddCategory('filter')}
+            placeholder={t.inventory.allCategories}
+            className="w-full py-2 px-3 bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/60 rounded-xl text-xs text-zinc-700 dark:text-zinc-200 focus:outline-none focus:border-indigo-500 appearance-auto"
+          />
+        </div>
 
         {/* Stock Level Filter */}
         <div className="flex bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl border border-zinc-200 dark:border-zinc-700/60 w-full md:w-auto shrink-0">
@@ -291,7 +510,14 @@ export default function InventoryPage() {
 
                   {/* Category */}
                   <td className="py-3 px-4 text-zinc-600 dark:text-zinc-300 font-medium">
-                    {prod.category?.name || t.inventory.allCategories}
+                    {prod.category?.name ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-semibold border border-indigo-500/20">
+                        <Tag className="w-2.5 h-2.5" />
+                        {prod.category.name}
+                      </span>
+                    ) : (
+                      <span className="text-zinc-400 text-[11px]">—</span>
+                    )}
                   </td>
 
                   {/* Cost Price */}
@@ -304,7 +530,7 @@ export default function InventoryPage() {
                     {formatCurrency(prod.sellingPrice)}
                   </td>
 
-                  {/* Quick Stock Adjuster (+1, +5, -1, -5) */}
+                  {/* Quick Stock Adjuster */}
                   <td className="py-3 px-4 text-center">
                     <QuickStockAdjuster
                       productId={prod.id}
@@ -339,7 +565,7 @@ export default function InventoryPage() {
                     />
                   </td>
 
-                  {/* Actions (Write off damaged) */}
+                  {/* Actions */}
                   <td className="py-3 px-4 text-end">
                     <button
                       type="button"
@@ -441,18 +667,15 @@ export default function InventoryPage() {
                   <label className="block text-[11px] font-semibold text-zinc-400 mb-1">
                     {t.inventory.category}
                   </label>
-                  <select
+                  {/* Category select in product form — also with "+ Add New" */}
+                  <CategorySelect
                     value={newProduct.categoryId}
-                    onChange={(e) => setNewProduct({ ...newProduct, categoryId: e.target.value })}
-                    className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs text-white focus:outline-none"
-                  >
-                    <option value="">{t.inventory.allCategories}</option>
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
+                    categories={categories}
+                    onChange={(val) => setNewProduct({ ...newProduct, categoryId: val })}
+                    onRequestAddNew={() => openAddCategory('form')}
+                    placeholder="Select Category"
+                    className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500"
+                  />
                 </div>
 
                 <div>
@@ -658,6 +881,13 @@ export default function InventoryPage() {
           setIsPinModalOpen(false);
           setIsAddModalOpen(true);
         }}
+      />
+
+      {/* Add New Category Modal */}
+      <AddCategoryModal
+        isOpen={isAddCategoryOpen}
+        onClose={() => setIsAddCategoryOpen(false)}
+        onCreated={handleCategoryCreated}
       />
     </div>
   );

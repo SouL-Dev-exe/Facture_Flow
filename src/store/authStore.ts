@@ -45,7 +45,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       fullName: role.charAt(0).toUpperCase() + role.slice(1) + ' User',
       email: `${role}@factureflow.com`,
       role,
-      pinCode: role === 'admin' ? '1111' : role === 'manager' ? '2222' : '3333',
+      pinCode: role === 'admin' ? '1111' : role === 'manager' ? '2222' : role === 'stocker' ? '4444' : '3333',
       createdAt: new Date().toISOString(),
     };
     if (typeof window !== 'undefined') {
@@ -92,7 +92,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const isDefaultValid =
         (targetRole === 'admin' && (trimmed === 'admin123' || trimmed === '1111' || trimmed === '1234')) ||
         (targetRole === 'manager' && (trimmed === 'manager123' || trimmed === '2222' || trimmed === '9999')) ||
-        (targetRole === 'cashier' && (trimmed === 'cashier123' || trimmed === '3333' || trimmed === '0000'));
+        (targetRole === 'cashier' && (trimmed === 'cashier123' || trimmed === '3333' || trimmed === '0000')) ||
+        (targetRole === 'stocker' && (trimmed === 'stocker123' || trimmed === '4444'));
 
       if (user && isDefaultValid) {
         get().setUser(user);

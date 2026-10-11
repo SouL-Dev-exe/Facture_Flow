@@ -21,9 +21,11 @@
     "admin": "Admin",
     "manager": "Manager",
     "cashier": "Cashier",
+    "stocker": "Stocker",
     "adminFull": "Administrator",
     "managerFull": "Store Manager",
-    "cashierFull": "Cashier Staff"
+    "cashierFull": "Cashier Staff",
+    "stockerFull": "Warehouse Stocker"
   },
   "auth": {
     "securityVerification": "Security Verification",
@@ -42,14 +44,22 @@
     "incorrectFor": "Incorrect Password or PIN for",
     "adminDesc": "Full system write access, financial valuation overrides, and snapshot management.",
     "managerDesc": "Stock level adjustments, returns/credit notes approval, and price override authorization.",
-    "cashierDesc": "POS register operation, barcode product scanning, and invoice printing."
+    "cashierDesc": "POS register operation, barcode product scanning, and invoice printing.",
+    "stockerDesc": "Warehouse inventory management, stock level additions/deductions, and category control."
   },
   "dashboard": {
     "title": "Dashboard",
     "enterpriseBadge": "Enterprise Dashboard",
-    "subtitle": "Live POS & Inventory Overview",
+    "subtitle": "Live POS & Financial Intelligence",
     "welcome": "Welcome back",
-    "overviewDesc": "Here is what is happening with your stock, sales, and store performance today.",
+    "overviewDesc": "Real-time revenue intelligence, inventory valuation, and team sales velocity.",
+    "daily": "Daily View",
+    "monthly": "Monthly View",
+    "yearly": "Yearly View",
+    "timeframeDaily": "Daily",
+    "timeframeMonthly": "Monthly",
+    "timeframeYearly": "Yearly",
+    "grossRevenue": "Gross Revenue",
     "totalRevenue": "Total Revenue",
     "totalCost": "Total Cost",
     "grossProfit": "Gross Profit",
@@ -74,7 +84,30 @@
     "addStock": "Add New Product",
     "viewFactures": "View All Invoices",
     "noInvoices": "No invoices recorded yet",
-    "noActivity": "No audit records found"
+    "noActivity": "No audit records found",
+    "inventoryValuation": "Inventory Valuation & Capital",
+    "capitalTiedUp": "Capital Tied in Stock",
+    "potentialValuation": "Potential Retail Valuation",
+    "unrealizedProfit": "Unrealized Net Profit",
+    "hourlyVelocity": "Hourly Sales Velocity (Peak Store Traffic)",
+    "hourlySubtitle": "Identifies peak store volume to optimize staff scheduling",
+    "tvaCollected": "19% TVA Tax Collected",
+    "discountsApplied": "Total Discounts Applied",
+    "avgBasket": "Average Basket Size",
+    "transactions": "Total Transactions",
+    "netMargin": "Net Profit Margin",
+    "momGrowth": "Month-over-Month Growth",
+    "yoyComparison": "Year-over-Year Historical Growth",
+    "paymentBreakdown": "Payment Methods Breakdown",
+    "topProducts": "Top-Selling Products Leaderboard",
+    "topCategories": "Top Categories by Sales",
+    "employeePerformance": "Cashier & Staff Sales Leaderboard",
+    "restrictedRole": "Manager/Admin View Only",
+    "damagedGoodsAlert": "Damaged Goods Loss",
+    "cash": "Cash",
+    "card": "Card",
+    "transfer": "Bank Transfer",
+    "cheque": "Cheque"
   },
   "inventory": {
     "title": "Inventory & Stock",
@@ -323,7 +356,8 @@
     "rbacGuard": "RBAC Guard",
     "adminAccess": "Full overrides & system write access.",
     "managerAccess": "Stock adjust, returns & price overrides.",
-    "cashierAccess": "POS & barcode billing checkout only."
+    "cashierAccess": "POS & barcode billing checkout only.",
+    "stockerAccess": "Warehouse inventory & stock management only."
   },
   "lang": {
     "en": "English",

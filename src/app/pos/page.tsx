@@ -58,6 +58,28 @@ export default function PosPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  if (currentUser.role === 'stocker') {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6">
+        <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center mb-4">
+          <Lock className="w-8 h-8" />
+        </div>
+        <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100 mb-2">
+          POS Sales Restricted
+        </h2>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-md mb-6">
+          The Stocker role is dedicated to warehouse and inventory operations. Creating sales and checkout is restricted to Cashiers and Managers.
+        </p>
+        <a
+          href="/inventory"
+          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-md shadow-indigo-600/30 transition"
+        >
+          Go to Inventory Management
+        </a>
+      </div>
+    );
+  }
   const [isProcessingCheckout, setIsProcessingCheckout] = useState(false);
   const [completedFacture, setCompletedFacture] = useState<Facture | null>(null);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);

@@ -22,22 +22,26 @@ export const Sidebar: React.FC = () => {
   const { currentUser } = useAuthStore();
   const { t } = useI18nStore();
 
-  const navItems = [
-    { labelKey: 'dashboard' as const, href: '/', icon: LayoutDashboard, badge: null },
-    { labelKey: 'pos' as const, href: '/pos', icon: ShoppingCart, badge: 'Live', isHot: true },
-    { labelKey: 'inventory' as const, href: '/inventory', icon: Boxes, badge: null },
-    { labelKey: 'factures' as const, href: '/factures', icon: FileSpreadsheet, badge: null },
-    { labelKey: 'creditNotes' as const, href: '/credit-notes', icon: RotateCcw, badge: null },
-    { labelKey: 'damaged' as const, href: '/damaged', icon: AlertTriangle, badge: null },
-    { labelKey: 'analytics' as const, href: '/analytics', icon: TrendingUp, badge: 'YoY' },
-    { labelKey: 'audit' as const, href: '/audit', icon: History, badge: 'Logs' },
+  const allNavItems = [
+    { labelKey: 'dashboard' as const, href: '/', icon: LayoutDashboard, badge: null, roles: ['admin', 'manager'] },
+    { labelKey: 'pos' as const, href: '/pos', icon: ShoppingCart, badge: 'Live', isHot: true, roles: ['admin', 'manager', 'cashier'] },
+    { labelKey: 'inventory' as const, href: '/inventory', icon: Boxes, badge: null, roles: ['admin', 'manager', 'cashier', 'stocker'] },
+    { labelKey: 'factures' as const, href: '/factures', icon: FileSpreadsheet, badge: null, roles: ['admin', 'manager', 'cashier'] },
+    { labelKey: 'creditNotes' as const, href: '/credit-notes', icon: RotateCcw, badge: null, roles: ['admin', 'manager'] },
+    { labelKey: 'damaged' as const, href: '/damaged', icon: AlertTriangle, badge: null, roles: ['admin', 'manager', 'stocker'] },
+    { labelKey: 'analytics' as const, href: '/analytics', icon: TrendingUp, badge: 'YoY', roles: ['admin', 'manager'] },
+    { labelKey: 'audit' as const, href: '/audit', icon: History, badge: 'Logs', roles: ['admin', 'manager'] },
   ];
+
+  const navItems = allNavItems.filter((item) => item.roles.includes(currentUser.role));
 
   const rbacDesc =
     currentUser.role === 'admin'
       ? t.common.adminAccess
       : currentUser.role === 'manager'
       ? t.common.managerAccess
+      : currentUser.role === 'stocker'
+      ? t.common.stockerAccess
       : t.common.cashierAccess;
 
   return (

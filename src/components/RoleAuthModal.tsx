@@ -81,6 +81,15 @@ export const RoleAuthModal: React.FC<RoleAuthModalProps> = ({
       demoPin: '3333',
       desc: t.auth.cashierDesc,
     },
+    stocker: {
+      title: t.roles.stockerFull,
+      color: 'text-amber-400',
+      bg: 'bg-amber-500/10',
+      border: 'border-amber-500/30',
+      demoPass: 'stocker123',
+      demoPin: '4444',
+      desc: t.auth.stockerDesc,
+    },
   };
 
   const meta = roleMeta[targetRole];
