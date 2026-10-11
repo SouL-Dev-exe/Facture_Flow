@@ -32,10 +32,13 @@ export async function POST(req: NextRequest) {
       discountAmount,
       taxAmount,
       totalAmount,
-      hasTva = true,
+      hasTva,
+      has_tva,
       paymentMethod = 'cash',
       notes,
     } = body;
+
+    const resolvedHasTva = has_tva !== undefined ? Boolean(has_tva) : (hasTva !== undefined ? Boolean(hasTva) : true);
 
     if (userId) {
       const actor = db.users.find((u) => u.id === userId);
@@ -76,7 +79,7 @@ export async function POST(req: NextRequest) {
       discountAmount: Number(discountAmount) || 0,
       taxAmount: Number(taxAmount) || 0,
       totalAmount: Number(totalAmount) || 0,
-      hasTva: !!hasTva,
+      hasTva: resolvedHasTva,
       paymentMethod,
       notes,
     });

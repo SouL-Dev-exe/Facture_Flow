@@ -25,13 +25,15 @@ import { PrintableInvoice } from '@/components/PrintableInvoice';
 
 export default function PosPage() {
   const { currentUser } = useAuthStore();
-  const { t, formatCurrency } = useI18nStore();
+  const { t, formatCurrency, isRTL } = useI18nStore();
   const {
     cart,
     selectedClient,
     globalDiscount,
     paymentMethod,
     notes,
+    isTvaEnabled,
+    toggleTva,
     addToCart,
     updateItemQuantity,
     setItemPrice,
@@ -182,6 +184,8 @@ export default function PosPage() {
         discountAmount: globalDiscount + getItemDiscountTotal(),
         taxAmount: getTaxTotal(),
         totalAmount: getTotalAmount(),
+        has_tva: isTvaEnabled,
+        hasTva: isTvaEnabled,
         paymentMethod,
         notes,
       };
@@ -477,10 +481,10 @@ export default function PosPage() {
         </div>
 
         {/* Cart Totals & Checkout Panel */}
-        <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800 space-y-2">
+        <div className="pt-3 border-t border-zinc-200 dark:border-zinc-800 space-y-2.5">
           {/* Global Discount Input */}
           <div className="flex items-center justify-between text-xs">
-            <span className="text-zinc-500">{t.pos.discountLabel}:</span>
+            <span className="text-zinc-500">{t.pos.discount}:</span>
             <input
               type="number"
               min="0"
@@ -496,9 +500,74 @@ export default function PosPage() {
             <span className="font-mono font-medium">{formatCurrency(getSubtotal())}</span>
           </div>
 
-          <div className="flex justify-between text-xs text-zinc-500">
-            <span>{t.pos.tax}:</span>
-            <span className="font-mono font-medium">{formatCurrency(getTaxTotal())}</span>
+          {/* Interactive TVA 19% Toggle Switch */}
+          <div className="flex items-center justify-between p-2 rounded-xl bg-zinc-100/90 dark:bg-zinc-800/70 border border-zinc-200/80 dark:border-zinc-700/60 backdrop-blur-md transition-all">
+            <div className="flex items-center gap-2">
+              <span
+                className={`w-2 h-2 rounded-full transition-colors ${
+                  isTvaEnabled
+                    ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.7)]'
+                    : 'bg-zinc-400 dark:bg-zinc-600'
+                }`}
+              />
+              <span className="text-xs font-semibold text-zinc-800 dark:text-zinc-200">
+                {t.pos.applyTva || 'Apply 19% TVA'}
+              </span>
+              <span
+                className={`text-[10px] px-1.5 py-0.5 rounded font-mono font-bold transition-colors ${
+                  isTvaEnabled
+                    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                    : 'bg-zinc-200 dark:bg-zinc-700/60 text-zinc-500 dark:text-zinc-400'
+                }`}
+              >
+                {isTvaEnabled ? '19%' : t.pos.exempt || '0%'}
+              </span>
+            </div>
+
+            {/* Glassmorphic Toggle Button */}
+            <button
+              type="button"
+              role="switch"
+              id="tva-toggle-btn"
+              aria-checked={isTvaEnabled}
+              onClick={() => toggleTva()}
+              title={isTvaEnabled ? 'Disable 19% TVA' : 'Enable 19% TVA'}
+              className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+                isTvaEnabled
+                  ? 'bg-emerald-600 dark:bg-emerald-500 shadow-sm shadow-emerald-500/30'
+                  : 'bg-zinc-300 dark:bg-zinc-700'
+              }`}
+            >
+              <span className="sr-only">Apply 19% TVA</span>
+              <span
+                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out mt-[1px] ${
+                  isTvaEnabled
+                    ? isRTL ? '-translate-x-5' : 'translate-x-5'
+                    : isRTL ? '-translate-x-0.5' : 'translate-x-0.5'
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* Tax (TVA) Row */}
+          <div
+            className={`flex justify-between text-xs transition-colors ${
+              isTvaEnabled
+                ? 'text-zinc-600 dark:text-zinc-400'
+                : 'text-zinc-400 dark:text-zinc-500'
+            }`}
+          >
+            <span className="flex items-center gap-1.5">
+              <span>{t.pos.tax}:</span>
+              {!isTvaEnabled && (
+                <span className="text-[10px] font-normal text-amber-500/90 dark:text-amber-400/90 bg-amber-500/10 px-1.5 py-0.2 rounded border border-amber-500/20">
+                  {t.pos.exempt || 'Exonéré'}
+                </span>
+              )}
+            </span>
+            <span className={`font-mono font-medium ${!isTvaEnabled ? 'line-through opacity-70' : ''}`}>
+              {formatCurrency(getTaxTotal())}
+            </span>
           </div>
 
           <div className="flex justify-between text-base font-black border-t border-zinc-200 dark:border-zinc-800 pt-2 text-zinc-900 dark:text-white">

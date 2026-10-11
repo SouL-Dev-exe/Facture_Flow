@@ -230,7 +230,7 @@ export const PrintableInvoice: React.FC<PrintableInvoiceProps> = ({
                         </div>
                       )}
                       <div className="flex justify-between text-zinc-600">
-                        <span>{t.printable.tax}:</span>
+                        <span>{t.printable.tax} {facture.hasTva ? '(19%)' : `(${t.printable.exempt || 'Exonéré'})`}:</span>
                         <span className="font-mono font-medium">{formatCurrency(facture.taxAmount)}</span>
                       </div>
                       <div className="border-t-2 border-zinc-900 pt-2 flex justify-between text-base font-black text-zinc-950">
@@ -323,7 +323,7 @@ export const PrintableInvoice: React.FC<PrintableInvoiceProps> = ({
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span>{t.pos.tax}:</span>
+                    <span>{t.pos.tax} {facture.hasTva ? '(19%)' : `(${t.printable.exempt || 'Exonéré'})`}:</span>
                     <span>{formatCurrency(facture.taxAmount)}</span>
                   </div>
                   <div className="flex justify-between font-black text-sm border-t border-black pt-1">

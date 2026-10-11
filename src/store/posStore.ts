@@ -18,6 +18,10 @@ interface PosState {
   } | null;
   barcodeScanQuery: string;
 
+  isTvaEnabled: boolean;
+  setIsTvaEnabled: (val: boolean) => void;
+  toggleTva: () => void;
+
   // Actions
   addToCart: (product: Product, quantity?: number) => { success: boolean; message?: string };
   updateItemQuantity: (productId: string, delta: number) => boolean;
@@ -53,6 +57,9 @@ export const usePosStore = create<PosState>((set, get) => ({
   isManagerPinModalOpen: false,
   pinActionPending: null,
   barcodeScanQuery: '',
+  isTvaEnabled: true,
+  setIsTvaEnabled: (val: boolean) => set({ isTvaEnabled: val }),
+  toggleTva: () => set((state) => ({ isTvaEnabled: !state.isTvaEnabled })),
 
   addToCart: (product: Product, quantity = 1) => {
     const { cart } = get();
@@ -245,34 +252,21 @@ export const usePosStore = create<PosState>((set, get) => ({
   },
 
   getTaxTotal: () => {
-    const { cart, globalDiscount } = get();
+    const { isTvaEnabled, globalDiscount } = get();
+    if (!isTvaEnabled) return 0;
+
     const subtotal = get().getSubtotal();
     const discountedSubtotal = Math.max(0, subtotal - globalDiscount);
-
-    // Calculate effective weighted tax
-    if (subtotal === 0) return 0;
-    const ratio = discountedSubtotal / subtotal;
-
-    return cart.reduce((acc, item) => {
-      let itemNet = item.unitPrice * item.quantity;
-      if (item.discount > 0) {
-        if (item.discountType === 'percentage') {
-          itemNet -= (itemNet * item.discount) / 100;
-        } else {
-          itemNet -= Math.min(itemNet, item.discount);
-        }
-      }
-      itemNet *= ratio;
-      const tax = (itemNet * item.taxRate) / 100;
-      return acc + tax;
-    }, 0);
+    // Standard 19% Algerian TVA
+    return Math.round(discountedSubtotal * 0.19 * 100) / 100;
   },
 
   getTotalAmount: () => {
     const subtotal = get().getSubtotal();
     const { globalDiscount } = get();
+    const discountedSubtotal = Math.max(0, subtotal - globalDiscount);
     const tax = get().getTaxTotal();
-    return Math.max(0, subtotal - globalDiscount + tax);
+    return Math.round((discountedSubtotal + tax) * 100) / 100;
   },
 
   getItemCount: () => {
