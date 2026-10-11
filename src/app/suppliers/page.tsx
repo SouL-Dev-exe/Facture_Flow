@@ -8,16 +8,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
+import { useI18nStore } from '@/store/i18nStore';
 import { Supplier, PaymentTerms } from '@/types';
-
-const PAYMENT_TERMS: { value: PaymentTerms; label: string }[] = [
-  { value: 'immediate', label: 'Immediate Payment' },
-  { value: 'net_30', label: 'Net 30 Days' },
-  { value: 'net_60', label: 'Net 60 Days' },
-  { value: 'net_90', label: 'Net 90 Days' },
-];
-
-const paymentTermLabel = (t: PaymentTerms) => PAYMENT_TERMS.find((p) => p.value === t)?.label || t;
 
 const EMPTY_FORM = {
   name: '',
@@ -33,6 +25,7 @@ const EMPTY_FORM = {
 
 export default function SuppliersPage() {
   const { currentUser } = useAuthStore();
+  const { t, isRTL } = useI18nStore();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -45,6 +38,14 @@ export default function SuppliersPage() {
   const [error, setError] = useState('');
 
   const canEdit = ['admin', 'manager'].includes(currentUser.role);
+
+  // Payment term labels — localised
+  const PAYMENT_TERM_LABELS: Record<PaymentTerms, string> = {
+    immediate: isRTL ? 'دفع فوري' : t.suppliers.paymentTerms === 'Conditions de Paiement' ? 'Paiement immédiat' : 'Immediate Payment',
+    net_30: 'Net 30',
+    net_60: 'Net 60',
+    net_90: 'Net 90',
+  };
 
   const fetchSuppliers = useCallback(async () => {
     setLoading(true);
@@ -88,7 +89,7 @@ export default function SuppliersPage() {
   };
 
   const handleSave = async () => {
-    if (!form.name.trim()) { setError('Company name is required'); return; }
+    if (!form.name.trim()) { setError(t.suppliers.companyName + ' ' + t.common.error); return; }
     setSaving(true);
     setError('');
     try {
@@ -105,13 +106,13 @@ export default function SuppliersPage() {
       });
       if (!res.ok) {
         const err = await res.json();
-        setError(err.error || 'Failed to save supplier');
+        setError(err.error || t.common.error);
         return;
       }
       setShowModal(false);
       fetchSuppliers();
     } catch {
-      setError('Network error');
+      setError(t.common.error);
     } finally {
       setSaving(false);
     }
@@ -143,18 +144,16 @@ export default function SuppliersPage() {
   const totalOrders = suppliers.reduce((sum, s) => sum + (s._count?.purchaseOrders || 0), 0);
 
   return (
-    <div className="p-6 lg:p-8 space-y-6">
+    <div className="p-6 lg:p-8 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3 mb-1">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-600/25">
-              <Building2 className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Supplier Directory</h1>
-              <p className="text-sm text-zinc-500 dark:text-zinc-400">Manage vendor profiles and purchase relationships</p>
-            </div>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-600/25">
+            <Building2 className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{t.suppliers.title}</h1>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">{t.suppliers.subtitle}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -163,8 +162,8 @@ export default function SuppliersPage() {
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors border border-zinc-200 dark:border-zinc-700"
           >
             <FileText className="w-4 h-4" />
-            Purchase Orders
-            <ChevronRight className="w-3.5 h-3.5 opacity-60" />
+            {t.nav.purchaseOrders}
+            <ChevronRight className={`w-3.5 h-3.5 opacity-60 ${isRTL ? 'rotate-180' : ''}`} />
           </Link>
           {canEdit && (
             <button
@@ -172,7 +171,7 @@ export default function SuppliersPage() {
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/25 transition-all"
             >
               <Plus className="w-4 h-4" />
-              New Supplier
+              {t.suppliers.newSupplier}
             </button>
           )}
         </div>
@@ -181,10 +180,10 @@ export default function SuppliersPage() {
       {/* Stats Bar */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total Suppliers', value: suppliers.length, icon: Building2, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-          { label: 'Total Purchase Orders', value: totalOrders, icon: FileText, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
-          { label: 'Active Vendors', value: suppliers.filter((s) => (s._count?.purchaseOrders || 0) > 0).length, icon: BadgeCheck, color: 'text-violet-500', bg: 'bg-violet-500/10' },
-          { label: 'Net 30+ Terms', value: suppliers.filter((s) => s.paymentTerms !== 'immediate').length, icon: Banknote, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+          { label: t.suppliers.totalSuppliers, value: suppliers.length, icon: Building2, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+          { label: t.purchaseOrders.title, value: totalOrders, icon: FileText, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
+          { label: t.suppliers.activeVendors, value: suppliers.filter((s) => (s._count?.purchaseOrders || 0) > 0).length, icon: BadgeCheck, color: 'text-violet-500', bg: 'bg-violet-500/10' },
+          { label: 'Net 30+', value: suppliers.filter((s) => s.paymentTerms !== 'immediate').length, icon: Banknote, color: 'text-amber-500', bg: 'bg-amber-500/10' },
         ].map((stat) => (
           <div key={stat.label} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 flex items-center gap-3">
             <div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center shrink-0`}>
@@ -200,12 +199,12 @@ export default function SuppliersPage() {
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+        <Search className={`absolute ${isRTL ? 'right-3.5' : 'left-3.5'} top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400`} />
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search suppliers by name, contact, or email..."
-          className="w-full pl-10 pr-4 py-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm text-zinc-800 dark:text-zinc-200 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all"
+          placeholder={t.common.search + '...'}
+          className={`w-full ${isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'} py-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm text-zinc-800 dark:text-zinc-200 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all`}
         />
       </div>
 
@@ -220,16 +219,16 @@ export default function SuppliersPage() {
             <div className="w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mb-4">
               <Building2 className="w-8 h-8 text-zinc-400" />
             </div>
-            <p className="text-zinc-600 dark:text-zinc-400 font-semibold">No suppliers found</p>
+            <p className="text-zinc-600 dark:text-zinc-400 font-semibold">{t.suppliers.noSuppliers}</p>
             <p className="text-sm text-zinc-400 mt-1">
-              {search ? 'Try adjusting your search' : 'Add your first supplier to get started'}
+              {search ? t.common.noResults : t.suppliers.noSuppliers}
             </p>
             {canEdit && !search && (
               <button
                 onClick={openCreate}
                 className="mt-4 flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors"
               >
-                <Plus className="w-4 h-4" /> Add Supplier
+                <Plus className="w-4 h-4" /> {t.suppliers.newSupplier}
               </button>
             )}
           </div>
@@ -238,7 +237,15 @@ export default function SuppliersPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-zinc-100 dark:border-zinc-800">
-                  {['Company', 'Contact Person', 'Phone / Email', 'NIF / NIS', 'Payment Terms', 'POs', 'Actions'].map((h) => (
+                  {[
+                    t.suppliers.companyName,
+                    t.suppliers.contactPerson,
+                    `${t.suppliers.phone} / ${t.suppliers.email}`,
+                    `${t.suppliers.nif} / ${t.suppliers.nis}`,
+                    t.suppliers.paymentTerms,
+                    t.nav.purchaseOrders,
+                    t.inventory.actions,
+                  ].map((h) => (
                     <th key={h} className="text-left px-5 py-3.5 text-xs font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
                       {h}
                     </th>
@@ -297,7 +304,7 @@ export default function SuppliersPage() {
                           ? 'bg-green-500/10 text-green-600 dark:text-green-400'
                           : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
                       }`}>
-                        {paymentTermLabel(s.paymentTerms)}
+                        {PAYMENT_TERM_LABELS[s.paymentTerms]}
                       </span>
                     </td>
                     <td className="px-5 py-4">
@@ -312,14 +319,14 @@ export default function SuppliersPage() {
                             <button
                               onClick={() => openEdit(s)}
                               className="p-2 rounded-lg text-zinc-400 hover:text-indigo-600 hover:bg-indigo-500/10 transition-all"
-                              title="Edit supplier"
+                              title={t.suppliers.editSupplier}
                             >
                               <Edit2 className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => setDeleteTarget(s)}
                               className="p-2 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-500/10 transition-all"
-                              title="Delete supplier"
+                              title={t.suppliers.deleteSupplier}
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -328,7 +335,7 @@ export default function SuppliersPage() {
                         <Link
                           href={`/purchase-orders?supplier=${s.id}`}
                           className="p-2 rounded-lg text-zinc-400 hover:text-emerald-600 hover:bg-emerald-500/10 transition-all"
-                          title="View purchase orders"
+                          title={t.suppliers.viewOrders}
                         >
                           <FileText className="w-4 h-4" />
                         </Link>
@@ -345,7 +352,7 @@ export default function SuppliersPage() {
       {/* Create / Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto" dir={isRTL ? 'rtl' : 'ltr'}>
             {/* Modal Header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-100 dark:border-zinc-800">
               <div className="flex items-center gap-3">
@@ -354,9 +361,8 @@ export default function SuppliersPage() {
                 </div>
                 <div>
                   <h2 className="font-bold text-zinc-900 dark:text-zinc-100 text-lg">
-                    {editingId ? 'Edit Supplier' : 'New Supplier'}
+                    {editingId ? t.suppliers.editSupplier : t.suppliers.newSupplier}
                   </h2>
-                  <p className="text-xs text-zinc-400">Fill in the vendor profile details below</p>
                 </div>
               </div>
               <button
@@ -379,12 +385,12 @@ export default function SuppliersPage() {
                 {/* Company Name */}
                 <div className="md:col-span-2">
                   <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 uppercase tracking-wider">
-                    Company Name <span className="text-red-500">*</span>
+                    {t.suppliers.companyName} <span className="text-red-500">*</span>
                   </label>
                   <input
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    placeholder="e.g. Atlas Distribution SARL"
+                    placeholder="Atlas Distribution SARL"
                     className="w-full px-4 py-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all"
                   />
                 </div>
@@ -392,12 +398,11 @@ export default function SuppliersPage() {
                 {/* Contact Person */}
                 <div>
                   <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 uppercase tracking-wider">
-                    Contact Person
+                    {t.suppliers.contactPerson}
                   </label>
                   <input
                     value={form.contactPerson}
                     onChange={(e) => setForm({ ...form, contactPerson: e.target.value })}
-                    placeholder="e.g. Karim Boudiaf"
                     className="w-full px-4 py-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all"
                   />
                 </div>
@@ -405,7 +410,7 @@ export default function SuppliersPage() {
                 {/* Phone */}
                 <div>
                   <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 uppercase tracking-wider">
-                    Phone
+                    {t.suppliers.phone}
                   </label>
                   <input
                     value={form.phone}
@@ -418,7 +423,7 @@ export default function SuppliersPage() {
                 {/* Email */}
                 <div>
                   <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 uppercase tracking-wider">
-                    Email
+                    {t.suppliers.email}
                   </label>
                   <input
                     value={form.email}
@@ -432,15 +437,15 @@ export default function SuppliersPage() {
                 {/* Payment Terms */}
                 <div>
                   <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 uppercase tracking-wider">
-                    Payment Terms
+                    {t.suppliers.paymentTerms}
                   </label>
                   <select
                     value={form.paymentTerms}
                     onChange={(e) => setForm({ ...form, paymentTerms: e.target.value as PaymentTerms })}
                     className="w-full px-4 py-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all"
                   >
-                    {PAYMENT_TERMS.map((pt) => (
-                      <option key={pt.value} value={pt.value}>{pt.label}</option>
+                    {(Object.keys(PAYMENT_TERM_LABELS) as PaymentTerms[]).map((pt) => (
+                      <option key={pt} value={pt}>{PAYMENT_TERM_LABELS[pt]}</option>
                     ))}
                   </select>
                 </div>
@@ -448,12 +453,11 @@ export default function SuppliersPage() {
                 {/* Address */}
                 <div className="md:col-span-2">
                   <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 uppercase tracking-wider">
-                    Address
+                    {t.suppliers.address}
                   </label>
                   <input
                     value={form.address}
                     onChange={(e) => setForm({ ...form, address: e.target.value })}
-                    placeholder="Industrial Zone, Blida, Algeria"
                     className="w-full px-4 py-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all"
                   />
                 </div>
@@ -461,7 +465,7 @@ export default function SuppliersPage() {
                 {/* NIF */}
                 <div>
                   <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 uppercase tracking-wider">
-                    NIF (Tax ID)
+                    {t.suppliers.nif}
                   </label>
                   <input
                     value={form.nif}
@@ -474,7 +478,7 @@ export default function SuppliersPage() {
                 {/* NIS */}
                 <div>
                   <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 uppercase tracking-wider">
-                    NIS (Statistical ID)
+                    {t.suppliers.nis}
                   </label>
                   <input
                     value={form.nis}
@@ -487,13 +491,12 @@ export default function SuppliersPage() {
                 {/* Notes */}
                 <div className="md:col-span-2">
                   <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 uppercase tracking-wider">
-                    Notes
+                    {t.suppliers.notes}
                   </label>
                   <textarea
                     value={form.notes}
                     onChange={(e) => setForm({ ...form, notes: e.target.value })}
                     rows={3}
-                    placeholder="Additional supplier notes, delivery conditions, etc."
                     className="w-full px-4 py-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-all resize-none"
                   />
                 </div>
@@ -504,7 +507,7 @@ export default function SuppliersPage() {
                   onClick={() => setShowModal(false)}
                   className="px-5 py-2.5 rounded-xl text-sm font-semibold text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
                 >
-                  Cancel
+                  {t.common.cancel}
                 </button>
                 <button
                   onClick={handleSave}
@@ -512,7 +515,7 @@ export default function SuppliersPage() {
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20 transition-all disabled:opacity-50"
                 >
                   {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                  {editingId ? 'Save Changes' : 'Create Supplier'}
+                  {editingId ? t.common.save : t.suppliers.newSupplier}
                 </button>
               </div>
             </div>
@@ -523,16 +526,15 @@ export default function SuppliersPage() {
       {/* Delete Confirm Modal */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl w-full max-w-md shadow-2xl p-6">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl w-full max-w-md shadow-2xl p-6" dir={isRTL ? 'rtl' : 'ltr'}>
             <div className="flex items-start gap-4 mb-5">
               <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center shrink-0">
                 <AlertTriangle className="w-6 h-6 text-red-500" />
               </div>
               <div>
-                <h3 className="font-bold text-zinc-900 dark:text-zinc-100 text-lg">Delete Supplier</h3>
+                <h3 className="font-bold text-zinc-900 dark:text-zinc-100 text-lg">{t.suppliers.deleteSupplier}</h3>
                 <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-                  Are you sure you want to delete <strong className="text-zinc-800 dark:text-zinc-200">{deleteTarget.name}</strong>?
-                  This action cannot be undone.
+                  <strong className="text-zinc-800 dark:text-zinc-200">{deleteTarget.name}</strong>
                 </p>
               </div>
             </div>
@@ -541,7 +543,7 @@ export default function SuppliersPage() {
                 onClick={() => setDeleteTarget(null)}
                 className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
               >
-                Cancel
+                {t.common.cancel}
               </button>
               <button
                 onClick={handleDelete}
@@ -549,7 +551,7 @@ export default function SuppliersPage() {
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-red-600 hover:bg-red-700 text-white transition-colors disabled:opacity-50"
               >
                 {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                Delete
+                {t.common.delete}
               </button>
             </div>
           </div>

@@ -4,21 +4,22 @@ import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import {
   FileText, Plus, Search, Loader2, X, Save, AlertTriangle, Trash2,
   PackageCheck, PackageOpen, ChevronDown, ChevronUp, Building2,
-  Tag, Hash, CalendarDays, ArrowRight, Boxes, RefreshCw, CheckCircle2,
+  Tag, CalendarDays, ArrowRight, Boxes, RefreshCw, CheckCircle2,
   DollarSign, ShoppingCart
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
+import { useI18nStore } from '@/store/i18nStore';
 import { PurchaseOrder, Supplier, Product } from '@/types';
 
-const fmt = (n: number) => n.toLocaleString('fr-DZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' DA';
-const fmtDate = (d: string) => new Date(d).toLocaleDateString('fr-DZ', { day: '2-digit', month: 'short', year: 'numeric' });
+const fmtDate = (d: string) => new Date(d).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
 
 interface NewItemRow { productId: string; quantity: number; unitCost: number }
 
 function PurchaseOrdersContent() {
   const { currentUser } = useAuthStore();
+  const { t, isRTL, formatCurrency } = useI18nStore();
   const searchParams = useSearchParams();
   const filterSupplierId = searchParams.get('supplier');
 
@@ -90,9 +91,9 @@ function PurchaseOrdersContent() {
   const formTotal = formItems.reduce((sum, it) => sum + (it.quantity * it.unitCost), 0);
 
   const handleCreate = async () => {
-    if (!formSupplierId) { setError('Please select a supplier'); return; }
+    if (!formSupplierId) { setError(t.purchaseOrders.supplier + ' ' + t.common.error); return; }
     if (formItems.some((it) => !it.productId || it.quantity <= 0 || it.unitCost <= 0)) {
-      setError('Each line item must have a product, valid quantity and cost'); return;
+      setError(t.common.error); return;
     }
     setSaving(true);
     setError('');
@@ -117,13 +118,13 @@ function PurchaseOrdersContent() {
       });
       if (!res.ok) {
         const err = await res.json();
-        setError(err.error || 'Failed to create PO');
+        setError(err.error || t.common.error);
         return;
       }
       setShowModal(false);
       fetchData();
     } catch {
-      setError('Network error');
+      setError(t.common.error);
     } finally {
       setSaving(false);
     }
@@ -179,8 +180,10 @@ function PurchaseOrdersContent() {
   const totalValue = orders.reduce((sum, o) => sum + o.totalAmount, 0);
   const draftValue = orders.filter((o) => o.status === 'draft').reduce((sum, o) => sum + o.totalAmount, 0);
 
+  const statusLabel = (s: string) => s === 'draft' ? t.purchaseOrders.draft : t.purchaseOrders.received;
+
   return (
-    <div className="p-6 lg:p-8 space-y-6">
+    <div className="p-6 lg:p-8 space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -188,12 +191,12 @@ function PurchaseOrdersContent() {
             <FileText className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Purchase Orders</h1>
+            <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{t.purchaseOrders.title}</h1>
             <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              Factures d&apos;achat — incoming stock from suppliers
+              {t.purchaseOrders.subtitle}
               {filterSupplierId && suppliers.find((s) => s.id === filterSupplierId) && (
                 <span className="ml-2 px-2 py-0.5 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-lg text-xs font-semibold">
-                  Filtered: {suppliers.find((s) => s.id === filterSupplierId)?.name}
+                  {suppliers.find((s) => s.id === filterSupplierId)?.name}
                 </span>
               )}
             </p>
@@ -205,12 +208,12 @@ function PurchaseOrdersContent() {
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors border border-zinc-200 dark:border-zinc-700"
           >
             <Building2 className="w-4 h-4" />
-            Suppliers
+            {t.nav.suppliers}
           </Link>
           <button
             onClick={fetchData}
             className="p-2.5 rounded-xl text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-all border border-zinc-200 dark:border-zinc-700"
-            title="Refresh"
+            title={t.common.refresh}
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -220,7 +223,7 @@ function PurchaseOrdersContent() {
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/25 transition-all"
             >
               <Plus className="w-4 h-4" />
-              New Purchase Order
+              {t.purchaseOrders.newPo}
             </button>
           )}
         </div>
@@ -229,10 +232,10 @@ function PurchaseOrdersContent() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total POs', value: orders.length, icon: FileText, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
-          { label: 'Draft / Pending', value: totalDraft, sub: fmt(draftValue), icon: PackageOpen, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-          { label: 'Received', value: totalReceived, icon: PackageCheck, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-          { label: 'Total Ordered Value', value: fmt(totalValue), icon: DollarSign, color: 'text-violet-500', bg: 'bg-violet-500/10' },
+          { label: t.purchaseOrders.title, value: orders.length, icon: FileText, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
+          { label: t.purchaseOrders.draft, value: totalDraft, sub: formatCurrency(draftValue), icon: PackageOpen, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+          { label: t.purchaseOrders.received, value: totalReceived, icon: PackageCheck, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+          { label: t.purchaseOrders.orderTotal, value: formatCurrency(totalValue), icon: DollarSign, color: 'text-violet-500', bg: 'bg-violet-500/10' },
         ].map((stat) => (
           <div key={stat.label} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-4 flex items-center gap-3">
             <div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center shrink-0`}>
@@ -250,12 +253,12 @@ function PurchaseOrdersContent() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+          <Search className={`absolute ${isRTL ? 'right-3.5' : 'left-3.5'} top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400`} />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by PO number, supplier, or ref..."
-            className="w-full pl-10 pr-4 py-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm text-zinc-800 dark:text-zinc-200 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all"
+            placeholder={`${t.common.search}...`}
+            className={`w-full ${isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'} py-3 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-sm text-zinc-800 dark:text-zinc-200 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all`}
           />
         </div>
         <div className="flex gap-2">
@@ -269,7 +272,7 @@ function PurchaseOrdersContent() {
                   : 'bg-white dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-indigo-400'
               }`}
             >
-              {s === 'all' ? 'All Orders' : s.charAt(0).toUpperCase() + s.slice(1)}
+              {s === 'all' ? t.factures.filterAll : statusLabel(s)}
             </button>
           ))}
         </div>
@@ -286,16 +289,13 @@ function PurchaseOrdersContent() {
             <div className="w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mb-4">
               <FileText className="w-8 h-8 text-zinc-400" />
             </div>
-            <p className="text-zinc-600 dark:text-zinc-400 font-semibold">No purchase orders found</p>
-            <p className="text-sm text-zinc-400 mt-1">
-              {search ? 'Try a different search term' : 'Create your first PO to start ordering stock'}
-            </p>
+            <p className="text-zinc-600 dark:text-zinc-400 font-semibold">{t.purchaseOrders.noPOs}</p>
             {canEdit && !search && (
               <button
                 onClick={openCreate}
                 className="mt-4 flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition-colors"
               >
-                <Plus className="w-4 h-4" /> New Purchase Order
+                <Plus className="w-4 h-4" /> {t.purchaseOrders.newPo}
               </button>
             )}
           </div>
@@ -314,9 +314,7 @@ function PurchaseOrdersContent() {
                 >
                   {/* Status Icon */}
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                    po.status === 'received'
-                      ? 'bg-emerald-500/10'
-                      : 'bg-amber-500/10'
+                    po.status === 'received' ? 'bg-emerald-500/10' : 'bg-amber-500/10'
                   }`}>
                     {po.status === 'received'
                       ? <PackageCheck className="w-5 h-5 text-emerald-500" />
@@ -332,7 +330,7 @@ function PurchaseOrdersContent() {
                           ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
                           : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
                       }`}>
-                        {po.status}
+                        {statusLabel(po.status)}
                       </span>
                       {po.invoiceReference && (
                         <span className="text-[10px] px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-500 font-mono">
@@ -351,17 +349,17 @@ function PurchaseOrdersContent() {
                       </span>
                       <span className="flex items-center gap-1">
                         <Boxes className="w-3 h-3" />
-                        {po.items.length} line{po.items.length !== 1 ? 's' : ''}
+                        {po.items.length} {t.purchaseOrders.lineItems}
                       </span>
                     </div>
                   </div>
 
                   <div className="text-right shrink-0">
-                    <p className="font-bold text-zinc-900 dark:text-zinc-100 text-base">{fmt(po.totalAmount)}</p>
+                    <p className="font-bold text-zinc-900 dark:text-zinc-100 text-base">{formatCurrency(po.totalAmount)}</p>
                     {po.receivedAt && (
                       <p className="text-xs text-emerald-500 flex items-center gap-1 justify-end">
                         <CheckCircle2 className="w-3 h-3" />
-                        Received {fmtDate(po.receivedAt)}
+                        {t.purchaseOrders.received} {fmtDate(po.receivedAt)}
                       </p>
                     )}
                   </div>
@@ -372,10 +370,9 @@ function PurchaseOrdersContent() {
                         <button
                           onClick={(e) => { e.stopPropagation(); setReceiveTarget(po); }}
                           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors shadow"
-                          title="Mark as received"
                         >
                           <PackageCheck className="w-3.5 h-3.5" />
-                          Receive
+                          {t.purchaseOrders.receive}
                         </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); setDeleteTarget(po); }}
@@ -396,42 +393,34 @@ function PurchaseOrdersContent() {
                 {isExpanded && (
                   <div className="border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/30">
                     <div className="px-5 py-4">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-3">Line Items</h4>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-3">{t.purchaseOrders.lineItems}</h4>
                       <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
                         <table className="w-full text-sm">
                           <thead>
                             <tr className="border-b border-zinc-100 dark:border-zinc-800">
-                              <th className="text-left px-4 py-3 text-xs font-bold text-zinc-400 uppercase tracking-wider">Product</th>
-                              <th className="text-left px-4 py-3 text-xs font-bold text-zinc-400 uppercase tracking-wider">SKU</th>
-                              <th className="text-right px-4 py-3 text-xs font-bold text-zinc-400 uppercase tracking-wider">Qty</th>
-                              <th className="text-right px-4 py-3 text-xs font-bold text-zinc-400 uppercase tracking-wider">Unit Cost</th>
-                              <th className="text-right px-4 py-3 text-xs font-bold text-zinc-400 uppercase tracking-wider">Total</th>
+                              {[t.purchaseOrders.product, 'SKU', t.purchaseOrders.qty, t.purchaseOrders.unitCost, t.purchaseOrders.lineTotal].map((h) => (
+                                <th key={h} className="text-left px-4 py-3 text-xs font-bold text-zinc-400 uppercase tracking-wider">{h}</th>
+                              ))}
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
                             {po.items.map((item) => (
                               <tr key={item.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                                <td className="px-4 py-3">
-                                  <span className="font-medium text-zinc-800 dark:text-zinc-200">
-                                    {item.product?.name || item.productId}
-                                  </span>
-                                </td>
-                                <td className="px-4 py-3">
-                                  <span className="text-xs font-mono text-zinc-400">{item.product?.sku || '—'}</span>
-                                </td>
+                                <td className="px-4 py-3 font-medium text-zinc-800 dark:text-zinc-200">{item.product?.name || item.productId}</td>
+                                <td className="px-4 py-3 text-xs font-mono text-zinc-400">{item.product?.sku || '—'}</td>
                                 <td className="px-4 py-3 text-right font-bold text-zinc-900 dark:text-zinc-100">{item.quantity}</td>
-                                <td className="px-4 py-3 text-right text-zinc-600 dark:text-zinc-300">{fmt(item.unitCost)}</td>
-                                <td className="px-4 py-3 text-right font-bold text-zinc-900 dark:text-zinc-100">{fmt(item.totalCost)}</td>
+                                <td className="px-4 py-3 text-right text-zinc-600 dark:text-zinc-300">{formatCurrency(item.unitCost)}</td>
+                                <td className="px-4 py-3 text-right font-bold text-zinc-900 dark:text-zinc-100">{formatCurrency(item.totalCost)}</td>
                               </tr>
                             ))}
                           </tbody>
                           <tfoot>
                             <tr className="border-t border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/50">
                               <td colSpan={4} className="px-4 py-3 text-right text-xs font-bold uppercase tracking-wider text-zinc-400">
-                                Order Total
+                                {t.purchaseOrders.orderTotal}
                               </td>
                               <td className="px-4 py-3 text-right text-base font-bold text-indigo-600 dark:text-indigo-400">
-                                {fmt(po.totalAmount)}
+                                {formatCurrency(po.totalAmount)}
                               </td>
                             </tr>
                           </tfoot>
@@ -439,7 +428,7 @@ function PurchaseOrdersContent() {
                       </div>
                       {po.notes && (
                         <div className="mt-3 px-4 py-3 bg-zinc-100 dark:bg-zinc-800 rounded-xl text-xs text-zinc-500 dark:text-zinc-400">
-                          <strong>Note:</strong> {po.notes}
+                          <strong>{t.suppliers.notes}:</strong> {po.notes}
                         </div>
                       )}
                     </div>
@@ -454,17 +443,14 @@ function PurchaseOrdersContent() {
       {/* New PO Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl w-full max-w-3xl shadow-2xl max-h-[92vh] flex flex-col">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl w-full max-w-3xl shadow-2xl max-h-[92vh] flex flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
             {/* Modal Header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-100 dark:border-zinc-800 shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center">
                   <FileText className="w-5 h-5 text-white" />
                 </div>
-                <div>
-                  <h2 className="font-bold text-zinc-900 dark:text-zinc-100 text-lg">New Purchase Order</h2>
-                  <p className="text-xs text-zinc-400">Create a facture d&apos;achat for incoming stock</p>
-                </div>
+                <h2 className="font-bold text-zinc-900 dark:text-zinc-100 text-lg">{t.purchaseOrders.newPo}</h2>
               </div>
               <button onClick={() => setShowModal(false)} className="p-2 rounded-xl text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all">
                 <X className="w-5 h-5" />
@@ -479,19 +465,18 @@ function PurchaseOrdersContent() {
                 </div>
               )}
 
-              {/* Header fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Supplier */}
                 <div>
                   <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 uppercase tracking-wider">
-                    Supplier <span className="text-red-500">*</span>
+                    {t.purchaseOrders.supplier} <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={formSupplierId}
                     onChange={(e) => setFormSupplierId(e.target.value)}
                     className="w-full px-4 py-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all"
                   >
-                    <option value="">— Select Supplier —</option>
+                    <option value="">—</option>
                     {suppliers.map((s) => (
                       <option key={s.id} value={s.id}>{s.name}</option>
                     ))}
@@ -501,12 +486,12 @@ function PurchaseOrdersContent() {
                 {/* Invoice Reference */}
                 <div>
                   <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 uppercase tracking-wider">
-                    Supplier Invoice Reference
+                    {t.purchaseOrders.invoiceRef}
                   </label>
                   <input
                     value={formInvoiceRef}
                     onChange={(e) => setFormInvoiceRef(e.target.value)}
-                    placeholder="e.g. FA-2024-0891"
+                    placeholder="FA-2024-0891"
                     className="w-full px-4 py-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all"
                   />
                 </div>
@@ -514,13 +499,12 @@ function PurchaseOrdersContent() {
                 {/* Notes */}
                 <div className="md:col-span-2">
                   <label className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5 uppercase tracking-wider">
-                    Notes
+                    {t.suppliers.notes}
                   </label>
                   <textarea
                     value={formNotes}
                     onChange={(e) => setFormNotes(e.target.value)}
                     rows={2}
-                    placeholder="Delivery instructions, batch info, etc."
                     className="w-full px-4 py-3 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-sm text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition-all resize-none"
                   />
                 </div>
@@ -530,13 +514,13 @@ function PurchaseOrdersContent() {
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <label className="text-xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                    Line Items <span className="text-red-500">*</span>
+                    {t.purchaseOrders.lineItems} <span className="text-red-500">*</span>
                   </label>
                   <button
                     onClick={addItemRow}
                     className="flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 transition-colors"
                   >
-                    <Plus className="w-3.5 h-3.5" /> Add Row
+                    <Plus className="w-3.5 h-3.5" /> {t.common.items}
                   </button>
                 </div>
 
@@ -547,26 +531,26 @@ function PurchaseOrdersContent() {
                       <div key={i} className="grid grid-cols-12 gap-2 items-start bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 rounded-xl p-3">
                         {/* Product select */}
                         <div className="col-span-5">
-                          <label className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-1 block">Product</label>
+                          <label className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-1 block">{t.purchaseOrders.product}</label>
                           <select
                             value={item.productId}
                             onChange={(e) => updateItem(i, 'productId', e.target.value)}
                             className="w-full px-3 py-2 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-800 dark:text-zinc-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
                           >
-                            <option value="">— Select Product —</option>
+                            <option value="">—</option>
                             {products.map((p) => (
                               <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>
                             ))}
                           </select>
                           {selectedProduct && (
                             <p className="text-[10px] text-zinc-400 mt-1 flex items-center gap-1">
-                              <Tag className="w-2.5 h-2.5" /> Current stock: {selectedProduct.quantitySellable} units
+                              <Tag className="w-2.5 h-2.5" /> {t.inventory.qtyAvailable}: {selectedProduct.quantitySellable}
                             </p>
                           )}
                         </div>
                         {/* Qty */}
                         <div className="col-span-2">
-                          <label className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-1 block">Qty</label>
+                          <label className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-1 block">{t.purchaseOrders.qty}</label>
                           <input
                             type="number"
                             min={1}
@@ -577,7 +561,7 @@ function PurchaseOrdersContent() {
                         </div>
                         {/* Unit Cost */}
                         <div className="col-span-3">
-                          <label className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-1 block">Unit Cost (DA)</label>
+                          <label className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-1 block">{t.purchaseOrders.unitCost}</label>
                           <input
                             type="number"
                             min={0}
@@ -589,9 +573,9 @@ function PurchaseOrdersContent() {
                         </div>
                         {/* Line Total */}
                         <div className="col-span-1">
-                          <label className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-1 block">Total</label>
+                          <label className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider mb-1 block">{t.purchaseOrders.lineTotal}</label>
                           <p className="text-xs font-bold text-zinc-700 dark:text-zinc-200 pt-2">
-                            {(item.quantity * item.unitCost).toLocaleString('fr-DZ', { maximumFractionDigits: 0 })}
+                            {(item.quantity * item.unitCost).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                           </p>
                         </div>
                         {/* Remove */}
@@ -614,9 +598,9 @@ function PurchaseOrdersContent() {
                 <div className="flex items-center justify-between mt-4 px-4 py-3 bg-indigo-500/5 dark:bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
                   <span className="text-sm font-semibold text-zinc-600 dark:text-zinc-300 flex items-center gap-2">
                     <ShoppingCart className="w-4 h-4 text-indigo-500" />
-                    Order Total
+                    {t.purchaseOrders.orderTotal}
                   </span>
-                  <span className="text-lg font-bold text-indigo-600 dark:text-indigo-400">{fmt(formTotal)}</span>
+                  <span className="text-lg font-bold text-indigo-600 dark:text-indigo-400">{formatCurrency(formTotal)}</span>
                 </div>
               </div>
             </div>
@@ -624,15 +608,15 @@ function PurchaseOrdersContent() {
             {/* Modal Footer */}
             <div className="flex items-center justify-between gap-3 px-6 py-5 border-t border-zinc-100 dark:border-zinc-800 shrink-0">
               <div className="text-xs text-zinc-400 flex items-center gap-2">
-                <ArrowRight className="w-3.5 h-3.5" />
-                Receiving this order will update inventory and recalculate weighted-average costs
+                <ArrowRight className={`w-3.5 h-3.5 ${isRTL ? 'rotate-180' : ''}`} />
+                {t.purchaseOrders.receiveConfirm}
               </div>
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setShowModal(false)}
                   className="px-5 py-2.5 rounded-xl text-sm font-semibold text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
                 >
-                  Cancel
+                  {t.common.cancel}
                 </button>
                 <button
                   onClick={handleCreate}
@@ -640,7 +624,7 @@ function PurchaseOrdersContent() {
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/20 transition-all disabled:opacity-50"
                 >
                   {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                  Create Draft PO
+                  {t.purchaseOrders.newPo}
                 </button>
               </div>
             </div>
@@ -651,23 +635,19 @@ function PurchaseOrdersContent() {
       {/* Receive Confirm */}
       {receiveTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl w-full max-w-md shadow-2xl p-6">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl w-full max-w-md shadow-2xl p-6" dir={isRTL ? 'rtl' : 'ltr'}>
             <div className="flex items-start gap-4 mb-5">
               <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
                 <PackageCheck className="w-6 h-6 text-emerald-500" />
               </div>
               <div>
-                <h3 className="font-bold text-zinc-900 dark:text-zinc-100 text-lg">Receive Purchase Order</h3>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-                  Receiving <strong className="text-zinc-800 dark:text-zinc-200">{receiveTarget.poNumber}</strong> will add{' '}
-                  <strong>{receiveTarget.items.length} product(s)</strong> to inventory and recalculate weighted-average costs.
-                  This action cannot be reversed.
-                </p>
+                <h3 className="font-bold text-zinc-900 dark:text-zinc-100 text-lg">{t.purchaseOrders.receive}</h3>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">{t.purchaseOrders.receiveConfirm}</p>
                 <div className="mt-3 space-y-1">
                   {receiveTarget.items.map((item) => (
                     <div key={item.id} className="flex items-center justify-between text-xs bg-zinc-50 dark:bg-zinc-800 rounded-lg px-3 py-1.5">
                       <span className="text-zinc-700 dark:text-zinc-300">{item.product?.name || item.productId}</span>
-                      <span className="font-bold text-emerald-600 dark:text-emerald-400">+{item.quantity} units</span>
+                      <span className="font-bold text-emerald-600 dark:text-emerald-400">+{item.quantity}</span>
                     </div>
                   ))}
                 </div>
@@ -678,7 +658,7 @@ function PurchaseOrdersContent() {
                 onClick={() => setReceiveTarget(null)}
                 className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
               >
-                Cancel
+                {t.common.cancel}
               </button>
               <button
                 onClick={handleReceive}
@@ -686,7 +666,7 @@ function PurchaseOrdersContent() {
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors disabled:opacity-50"
               >
                 {receiving ? <Loader2 className="w-4 h-4 animate-spin" /> : <PackageCheck className="w-4 h-4" />}
-                Confirm & Receive
+                {t.common.confirm}
               </button>
             </div>
           </div>
@@ -696,15 +676,15 @@ function PurchaseOrdersContent() {
       {/* Delete Confirm */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl w-full max-w-md shadow-2xl p-6">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl w-full max-w-md shadow-2xl p-6" dir={isRTL ? 'rtl' : 'ltr'}>
             <div className="flex items-start gap-4 mb-5">
               <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center shrink-0">
                 <AlertTriangle className="w-6 h-6 text-red-500" />
               </div>
               <div>
-                <h3 className="font-bold text-zinc-900 dark:text-zinc-100 text-lg">Delete Draft PO</h3>
+                <h3 className="font-bold text-zinc-900 dark:text-zinc-100 text-lg">{t.common.delete}</h3>
                 <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-                  Delete <strong>{deleteTarget.poNumber}</strong>? This cannot be undone.
+                  <strong>{deleteTarget.poNumber}</strong>
                 </p>
               </div>
             </div>
@@ -713,7 +693,7 @@ function PurchaseOrdersContent() {
                 onClick={() => setDeleteTarget(null)}
                 className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
               >
-                Cancel
+                {t.common.cancel}
               </button>
               <button
                 onClick={handleDelete}
@@ -721,7 +701,7 @@ function PurchaseOrdersContent() {
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-red-600 hover:bg-red-700 text-white transition-colors disabled:opacity-50"
               >
                 {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                Delete
+                {t.common.delete}
               </button>
             </div>
           </div>
